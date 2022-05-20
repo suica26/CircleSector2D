@@ -3,6 +3,7 @@ PVector mousePos = new PVector(0,0);
 Sector2D fanShape;
 MyBox box;
 float epsilon = 0.01;
+float s,t;
 
 /////////////////////////メインブロック///////////////////////////
 
@@ -17,7 +18,7 @@ void setup() {
 }
 
 void draw() {
-    pushMatrix();
+    //pushMatrix();
     translate(width / 2, height / 2);
     background(255);
     fill(255);
@@ -25,35 +26,46 @@ void draw() {
     fanShape.DisplayShape();
     box.DisplayShape();
     
+    var p = SectorPoint(fanShape,s,t);
+    fill(0,255,0);
+    ellipse(p.x,p.y,10,10);
+    println(s + "," + t + "," + p);
+    
+    /*
+    
     var start = millis();
     
     ArrayList<PVector> points = GetCrossPoints_SectorBox(fanShape,box);
     
     for (PVector p : box.v)
     {
-        points.add(p);
-    }
+    points.add(p);
+}
     
     for (PVector point : points) {
-        fill(0,255,0);
-        if (CheckPointInSector(fanShape,point))
-            ellipse(point.x, point.y, 10, 10);
-    }
+    fill(0,255,0);
+    if (CheckPointInSector(fanShape,point))
+    ellipse(point.x, point.y, 10, 10);
+}
     
     var finish = millis();
     
     popMatrix();
     fill(0);
     if (frameCount % 20 == 0) {
-        println(finish - start);
-    }
+    println(finish - start);
+}
+    */
 }
 
 /////////////////////////関数ブロック///////////////////////////
 
 void mouseMoved() {
-    mousePos.set(mouseX - (width / 2),mouseY - (height / 2));
-    box.SetPos(mousePos);
+    s = float(mouseX) / float(width);
+    t = float(mouseY) / float(height);
+    
+    //mousePos.set(mouseX - (width / 2),mouseY - (height / 2));
+    //box.SetPos(mousePos);
 }
 
 //外積関数
@@ -172,6 +184,23 @@ boolean CheckPointInSector(Sector2D f, PVector p) {
     return true;
 }
 
+//回転行列
+PVector RotateMatrix(float theta, PVector v) {
+    float x = v.x * cos(theta) - v.y * sin(theta);
+    float y = v.x * sin(theta) + v.y * cos(theta);
+    PVector r = new PVector(x,y);
+    return r;
+}
+
+//次の条件の時、扇形の中の点を返す
+//0 <= s <= 1
+//0 <= t <= 1
+PVector SectorPoint(Sector2D f, float s, float t) {
+    PVector v = PVector.add(PVector.sub(f.a,f.origin),PVector.mult(PVector.sub(f.b,f.a),s));
+    PVector p = PVector.add(RotateMatrix(t * (f.theta - f.alpha),v),f.origin);
+    return p;
+}
+
 /////////////////////////クラスブロック///////////////////////////
 
 // 基底クラス
@@ -180,7 +209,7 @@ class MyObject {
     void DisplayShape() {}
 }
 
-//2D扇形
+// 2D扇形
 class Sector2D extends MyObject{
     //alphaは回転前の角度
     //thetaは回転後の角度
