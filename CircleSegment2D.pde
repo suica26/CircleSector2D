@@ -2,6 +2,7 @@ PVector origin = new PVector(0,0);
 PVector mousePos = new PVector(0,0);
 Sector2D fanShape;
 MyBox box;
+float epsilon = 0.01;
 
 /////////////////////////メインブロック///////////////////////////
 
@@ -10,11 +11,13 @@ void settings() {
 }
 
 void setup() {
-    fanShape = new Sector2D(radians( -60),radians(60),origin,100,300);
+    textSize(32);
+    fanShape = new Sector2D(radians( -60),radians(60),origin, 100,300);
     box = new MyBox(origin,150,150);
 }
 
 void draw() {
+    pushMatrix();
     translate(width / 2, height / 2);
     background(255);
     fill(255);
@@ -22,11 +25,27 @@ void draw() {
     fanShape.DisplayShape();
     box.DisplayShape();
     
-    ArrayList<PVector> points = GetCrossPoints_CircleBox(fanShape,box);
+    var start = millis();
+    
+    ArrayList<PVector> points = GetCrossPoints_SectorBox(fanShape,box);
+    
+    for (PVector p : box.v)
+    {
+        points.add(p);
+    }
     
     for (PVector point : points) {
-        fill(#7FFF5C);
-        ellipse(point.x, point.y, 10, 10);
+        fill(0,255,0);
+        if (CheckPointInSector(fanShape,point))
+            ellipse(point.x, point.y, 10, 10);
+    }
+    
+    var finish = millis();
+    
+    popMatrix();
+    fill(0);
+    if (frameCount % 20 == 0) {
+        println(finish - start);
     }
 }
 
@@ -37,15 +56,26 @@ void mouseMoved() {
     box.SetPos(mousePos);
 }
 
-PVector[] GetCrossPoints(float x1, float y1, float x2, float y2, float circleX, float circleY, float r) {
+//外積関数
+float Cross(PVector a, PVector b) {
+    return a.x * b.y - a.y * b.x;
+}
+
+//円と線分の交点算出
+PVector[] GetCrossPoints_CircleLine(float x1, float y1, float x2, float y2, float circleX, float circleY, float r) {
     
+    //参考URL
+    //https://tjkendev.github.io/procon-library/python/geometry/circle_line_cross_point.html
+    //傾きの算出
     float xd = x2 - x1;
     float yd = y2 - y1;
+    //円の公式(x^2 + y^2 = r^2)への代入と整理
     float x = x1 - circleX;
     float y = y1 - circleY;
     float a = xd * xd + yd * yd;
     float b = xd * x + yd * y;
     float c = x * x + y * y - r * r;
+    //二次関数の解の公式
     //D = 0の時は1本で、D < 0の時は存在しない
     float d = b * b - a * c;
     float s1 = ( -b + sqrt(d)) / a;
@@ -67,28 +97,79 @@ PVector[] GetCrossPoints(float x1, float y1, float x2, float y2, float circleX, 
     return crossPoint;
 }
 
-ArrayList<PVector> GetCrossPoints_CircleBox(Sector2D f,MyBox b)
-    {
+//線分と線分の交点
+PVector GetCrossPoints_LineLine(PVector a, PVector b, PVector c, PVector d) {
+    //参考URL
+    //https://qiita.com/zu_rin/items/09876d2c7ec12974bc0f
+    float s,t;
+    float deno = Cross(PVector.sub(b,a),PVector.sub(d,c));
+    //線分が平行な場合はnull
+    if (deno == 0.0) return null;
+    
+    s = Cross(PVector.sub(c,a),PVector.sub(d,c)) / deno;
+    t = Cross(PVector.sub(b,a),PVector.sub(a,c)) / deno;
+    
+    //線分が交差していない場合
+    if (s < 0.0 || 1.0 < s || t < 0.0 || 1.0 < t) return null;
+    
+    return PVector.add(a,PVector.mult(PVector.sub(b,a),s));
+}
+
+//扇形構成要素(外円、内円、二線分)と四角形の交点算出
+ArrayList<PVector> GetCrossPoints_SectorBox(Sector2D f,MyBox b) {
+    //円と線分の交差点算出
     ArrayList<PVector> points = new ArrayList<PVector>();
-    for (int i = 0;i < 3;i++)
-        {
-        var p1 = GetCrossPoints(b.v[i].x,b.v[i].y,b.v[i + 1].x,b.v[i + 1].y,f.origin.x,f.origin.y,f.r1);
-        var p2 = GetCrossPoints(b.v[i].x,b.v[i].y,b.v[i + 1].x,b.v[i + 1].y,f.origin.x,f.origin.y,f.r2);
+    for (int i = 0;i < 3;i++) {
+        var p1 = GetCrossPoints_CircleLine(b.v[i].x,b.v[i].y,b.v[i + 1].x,b.v[i + 1].y,f.origin.x,f.origin.y,f.r1);
+        var p2 = GetCrossPoints_CircleLine(b.v[i].x,b.v[i].y,b.v[i + 1].x,b.v[i + 1].y,f.origin.x,f.origin.y,f.r2);
         
         if (p1[0] != null)points.add(p1[0]);
         if (p1[1] != null)points.add(p1[1]);
         if (p2[0] != null)points.add(p2[0]);
         if (p2[1] != null)points.add(p2[1]);
     }
-    var p1 = GetCrossPoints(b.v[3].x,b.v[3].y,b.v[0].x,b.v[0].y,f.origin.x,f.origin.y,f.r1);
-    var p2 = GetCrossPoints(b.v[3].x,b.v[3].y,b.v[0].x,b.v[0].y,f.origin.x,f.origin.y,f.r2);
+    var p1 = GetCrossPoints_CircleLine(b.v[3].x,b.v[3].y,b.v[0].x,b.v[0].y,f.origin.x,f.origin.y,f.r1);
+    var p2 = GetCrossPoints_CircleLine(b.v[3].x,b.v[3].y,b.v[0].x,b.v[0].y,f.origin.x,f.origin.y,f.r2);
     
     if (p1[0] != null)points.add(p1[0]);
     if (p1[1] != null)points.add(p1[1]);
     if (p2[0] != null)points.add(p2[0]);
     if (p2[1] != null)points.add(p2[1]);
     
+    //円と線分の交差点算出
+    for (int i = 0; i < 3;i++) {
+        var p = GetCrossPoints_LineLine(b.v[i],b.v[i + 1],f.a,f.b);
+        var q = GetCrossPoints_LineLine(b.v[i],b.v[i + 1],f.ad,f.bd);
+        
+        if (p!= null) points.add(p);
+        if (q!= null) points.add(q);
+    }
+    var p = GetCrossPoints_LineLine(b.v[3],b.v[0],f.a,f.b);
+    var q = GetCrossPoints_LineLine(b.v[3],b.v[0],f.ad,f.bd);
+    
+    if (p!= null) points.add(p);
+    if (q!= null) points.add(q);
+    
     return points;
+}
+
+boolean CheckPointInSector(Sector2D f, PVector p) {
+    //内円よりも外側にあるかどうか
+    if (p.mag() < f.r1 - epsilon) return false;
+    //外円よりも内側にあるかどうか
+    if (p.mag() > f.r2 + epsilon) return false;
+    //回転方向で場合分け
+    //正の回転の場合
+    if (f.theta - f.alpha >= 0) {
+        if (Cross(PVector.sub(p,f.a),PVector.sub(f.b,f.a)) >= epsilon) return false;
+        if (Cross(PVector.sub(p,f.ad),PVector.sub(f.bd,f.ad)) < - epsilon) return false;
+    }
+    else{
+        if (Cross(PVector.sub(p,f.a),PVector.sub(f.b,f.a)) < - epsilon) return false;
+        if (Cross(PVector.sub(p,f.ad),PVector.sub(f.bd,f.ad)) >= epsilon) return false;
+    }
+    
+    return true;
 }
 
 /////////////////////////クラスブロック///////////////////////////
@@ -142,7 +223,7 @@ class MyBox {
     float w,h;
     
     public MyBox(PVector position, float width, float height) {
-        this.pos = new PVector(position.x,position.y);
+        pos = new PVector(position.x,position.y);
         w = width;
         h = height;
         v[0] = new PVector(pos.x + w / 2, pos.y + h / 2);
@@ -152,11 +233,11 @@ class MyBox {
     }
     
     void SetPos(PVector position) {
-        this.pos.set(position);
-        v[0] = new PVector(pos.x + w / 2, pos.y + h / 2);
-        v[1] = new PVector(pos.x - w / 2, pos.y + h / 2);
-        v[2] = new PVector(pos.x - w / 2, pos.y - h / 2);
-        v[3] = new PVector(pos.x + w / 2, pos.y - h / 2);
+        pos.set(position);
+        v[0].set(pos.x + w / 2, pos.y + h / 2);
+        v[1].set(pos.x - w / 2, pos.y + h / 2);
+        v[2].set(pos.x - w / 2, pos.y - h / 2);
+        v[3].set(pos.x + w / 2, pos.y - h / 2);
     }
     
     void DisplayShape() {
