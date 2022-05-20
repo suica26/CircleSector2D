@@ -13,12 +13,12 @@ void settings() {
 
 void setup() {
     textSize(32);
-    fanShape = new Sector2D(radians( -60),radians(60),origin, 100,300);
+    fanShape = new Sector2D(radians(30),radians(120),origin, 100,300);
     box = new MyBox(origin,150,150);
 }
 
 void draw() {
-    //pushMatrix();
+    pushMatrix();
     translate(width / 2, height / 2);
     background(255);
     fill(255);
@@ -26,46 +26,41 @@ void draw() {
     fanShape.DisplayShape();
     box.DisplayShape();
     
-    var p = SectorPoint(fanShape,s,t);
-    fill(0,255,0);
-    ellipse(p.x,p.y,10,10);
-    println(s + "," + t + "," + p);
+    s = cos(radians(frameCount * 5)) / 2 + 0.5;
+    t = sin(radians(frameCount)) / 2 + 0.5;
     
-    /*
+    var p = SectorPoint(fanShape,s,t);
+    fill(255,0,0);
+    ellipse(p.x,p.y,10,10);
     
     var start = millis();
     
+    fill(0,255,0);
     ArrayList<PVector> points = GetCrossPoints_SectorBox(fanShape,box);
     
-    for (PVector p : box.v)
-    {
-    points.add(p);
-}
+    for (PVector v : box.v) {
+        points.add(v);
+    }
     
     for (PVector point : points) {
-    fill(0,255,0);
-    if (CheckPointInSector(fanShape,point))
-    ellipse(point.x, point.y, 10, 10);
-}
+        if (CheckPointInSector(fanShape,point))
+            ellipse(point.x, point.y, 10, 10);
+    }
     
     var finish = millis();
     
     popMatrix();
     fill(0);
     if (frameCount % 20 == 0) {
-    println(finish - start);
-}
-    */
+        println(finish - start);
+    }
 }
 
 /////////////////////////関数ブロック///////////////////////////
 
 void mouseMoved() {
-    s = float(mouseX) / float(width);
-    t = float(mouseY) / float(height);
-    
-    //mousePos.set(mouseX - (width / 2),mouseY - (height / 2));
-    //box.SetPos(mousePos);
+    mousePos.set(mouseX - (width / 2),mouseY - (height / 2));
+    box.SetPos(mousePos);
 }
 
 //外積関数
@@ -77,11 +72,11 @@ float Cross(PVector a, PVector b) {
 PVector[] GetCrossPoints_CircleLine(float x1, float y1, float x2, float y2, float circleX, float circleY, float r) {
     
     //参考URL
-    //https://tjkendev.github.io/procon-library/python/geometry/circle_line_cross_point.html
+    //https :/ /tjkendev.github.io/procon-library/python/geometry/circle_line_cross_point.html
     //傾きの算出
     float xd = x2 - x1;
     float yd = y2 - y1;
-    //円の公式(x^2 + y^2 = r^2)への代入と整理
+    //円の公式(x ^ 2 + y ^ 2 = r ^ 2)への代入と整理
     float x = x1 - circleX;
     float y = y1 - circleY;
     float a = xd * xd + yd * yd;
@@ -112,7 +107,7 @@ PVector[] GetCrossPoints_CircleLine(float x1, float y1, float x2, float y2, floa
 //線分と線分の交点
 PVector GetCrossPoints_LineLine(PVector a, PVector b, PVector c, PVector d) {
     //参考URL
-    //https://qiita.com/zu_rin/items/09876d2c7ec12974bc0f
+    //https :/ /qiita.com/zu_rin/items/09876d2c7ec12974bc0f
     float s,t;
     float deno = Cross(PVector.sub(b,a),PVector.sub(d,c));
     //線分が平行な場合はnull
@@ -122,7 +117,7 @@ PVector GetCrossPoints_LineLine(PVector a, PVector b, PVector c, PVector d) {
     t = Cross(PVector.sub(b,a),PVector.sub(a,c)) / deno;
     
     //線分が交差していない場合
-    if (s < 0.0 || 1.0 < s || t < 0.0 || 1.0 < t) return null;
+    if (s < 0.0 || 1.0 < s || t < 0.0 ||  1.0 < t) return null;
     
     return PVector.add(a,PVector.mult(PVector.sub(b,a),s));
 }
@@ -177,7 +172,7 @@ boolean CheckPointInSector(Sector2D f, PVector p) {
         if (Cross(PVector.sub(p,f.ad),PVector.sub(f.bd,f.ad)) < - epsilon) return false;
     }
     else{
-        if (Cross(PVector.sub(p,f.a),PVector.sub(f.b,f.a)) < - epsilon) return false;
+        if (Cross(PVector.sub(p,f.a),PVector.sub(f.b,f.a)) <- epsilon) return false;
         if (Cross(PVector.sub(p,f.ad),PVector.sub(f.bd,f.ad)) >= epsilon) return false;
     }
     
