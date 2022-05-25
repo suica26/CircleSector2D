@@ -3,6 +3,7 @@ PVector mousePos = new PVector(0,0);
 Sector2D fanShape;
 MyBox box;
 float epsilon = 0.01;
+float s,t;
 
 /////////////////////////メインブロック///////////////////////////
 
@@ -12,7 +13,7 @@ void settings() {
 
 void setup() {
     textSize(32);
-    fanShape = new Sector2D(radians( -60),radians(60),origin, 100,300);
+    fanShape = new Sector2D(radians( -60),radians(30),origin, 100,300);
     box = new MyBox(origin,150,150);
 }
 
@@ -25,19 +26,28 @@ void draw() {
     fanShape.DisplayShape();
     box.DisplayShape();
     
+    s = cos(radians(frameCount * 5)) / 2 + 0.5;
+    t = sin(radians(frameCount)) / 2 + 0.5;
+    
+    var p = SectorPoint(fanShape,s,t);
+    fill(255,0,0);
+    //ellipse(p.x,p.y,10,10);
+    
     var start = millis();
     
+    fill(0,255,0);
+    line(fanShape.origin.x,fanShape.origin.y,box.pos.x,box.pos.y);
     ArrayList<PVector> points = GetCrossPoints_SectorBox(fanShape,box);
     
-    for (PVector p : box.v)
-    {
-        points.add(p);
+    for (PVector v : box.v) {
+        points.add(v);
     }
     
     for (PVector point : points) {
-        fill(0,255,0);
+        fill(255,0,0);
         if (CheckPointInSector(fanShape,point))
-            ellipse(point.x, point.y, 10, 10);
+            fill(0,255,0);
+        ellipse(point.x, point.y, 10, 10);
     }
     
     var finish = millis();
@@ -69,7 +79,7 @@ PVector[] GetCrossPoints_CircleLine(float x1, float y1, float x2, float y2, floa
     //傾きの算出
     float xd = x2 - x1;
     float yd = y2 - y1;
-    //円の公式(x^2 + y^2 = r^2)への代入と整理
+    //円の公式(x ^ 2 + y^ 2 = r ^ 2)への代入と整理
     float x = x1 - circleX;
     float y = y1 - circleY;
     float a = xd * xd + yd * yd;
@@ -88,7 +98,7 @@ PVector[] GetCrossPoints_CircleLine(float x1, float y1, float x2, float y2, floa
         crossPoint[s] = new PVector(x1 + s1 * xd, y1 + s1 * yd);
         s++;
     }
-    if (s2 >= 0 && s2 <= 1)
+    if (s2 >= 0 && s2 <=  1)
         {
         crossPoint[s] = new PVector(x1 + s2 * xd, y1 + s2 * yd);
         s++;
@@ -100,7 +110,7 @@ PVector[] GetCrossPoints_CircleLine(float x1, float y1, float x2, float y2, floa
 //線分と線分の交点
 PVector GetCrossPoints_LineLine(PVector a, PVector b, PVector c, PVector d) {
     //参考URL
-    //https://qiita.com/zu_rin/items/09876d2c7ec12974bc0f
+    //https :/ /qiita.com/zu_rin/items/09876d2c7ec12974bc0f
     float s,t;
     float deno = Cross(PVector.sub(b,a),PVector.sub(d,c));
     //線分が平行な場合はnull
@@ -110,7 +120,7 @@ PVector GetCrossPoints_LineLine(PVector a, PVector b, PVector c, PVector d) {
     t = Cross(PVector.sub(b,a),PVector.sub(a,c)) / deno;
     
     //線分が交差していない場合
-    if (s < 0.0 || 1.0 < s || t < 0.0 || 1.0 < t) return null;
+    if (s < 0.0 || 1.0 < s || t < 0.0 ||  1.0 < t) return null;
     
     return PVector.add(a,PVector.mult(PVector.sub(b,a),s));
 }
@@ -165,11 +175,28 @@ boolean CheckPointInSector(Sector2D f, PVector p) {
         if (Cross(PVector.sub(p,f.ad),PVector.sub(f.bd,f.ad)) < - epsilon) return false;
     }
     else{
-        if (Cross(PVector.sub(p,f.a),PVector.sub(f.b,f.a)) < - epsilon) return false;
+        if (Cross(PVector.sub(p,f.a),PVector.sub(f.b,f.a)) <- epsilon) return false;
         if (Cross(PVector.sub(p,f.ad),PVector.sub(f.bd,f.ad)) >= epsilon) return false;
     }
     
     return true;
+}
+
+//回転行列
+PVector RotateMatrix(float theta, PVector v) {
+    float x = v.x * cos(theta) - v.y * sin(theta);
+    float y = v.x * sin(theta) + v.y * cos(theta);
+    PVector r = new PVector(x,y);
+    return r;
+}
+
+//次の条件の時、扇形の中の点を返す
+//0 <= s <= 1
+//0 <= t <= 1
+PVector SectorPoint(Sector2D f, float s, float t) {
+    PVector v = PVector.add(PVector.sub(f.a,f.origin),PVector.mult(PVector.sub(f.b,f.a),s));
+    PVector p = PVector.add(RotateMatrix(t * (f.theta - f.alpha),v),f.origin);
+    return p;
 }
 
 /////////////////////////クラスブロック///////////////////////////
@@ -180,7 +207,7 @@ class MyObject {
     void DisplayShape() {}
 }
 
-//2D扇形
+// 2D扇形
 class Sector2D extends MyObject{
     //alphaは回転前の角度
     //thetaは回転後の角度
