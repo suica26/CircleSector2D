@@ -13,7 +13,7 @@ void settings() {
 
 void setup() {
     textSize(32);
-    fanShape = new Sector2D(radians(30),radians(120),origin, 100,300);
+    fanShape = new Sector2D(radians( -60),radians(30),origin, 100,300);
     box = new MyBox(origin,150,150);
 }
 
@@ -31,11 +31,12 @@ void draw() {
     
     var p = SectorPoint(fanShape,s,t);
     fill(255,0,0);
-    ellipse(p.x,p.y,10,10);
+    //ellipse(p.x,p.y,10,10);
     
     var start = millis();
     
     fill(0,255,0);
+    line(fanShape.origin.x,fanShape.origin.y,box.pos.x,box.pos.y);
     ArrayList<PVector> points = GetCrossPoints_SectorBox(fanShape,box);
     
     for (PVector v : box.v) {
@@ -43,8 +44,10 @@ void draw() {
     }
     
     for (PVector point : points) {
+        fill(255,0,0);
         if (CheckPointInSector(fanShape,point))
-            ellipse(point.x, point.y, 10, 10);
+            fill(0,255,0);
+        ellipse(point.x, point.y, 10, 10);
     }
     
     var finish = millis();
@@ -72,11 +75,11 @@ float Cross(PVector a, PVector b) {
 PVector[] GetCrossPoints_CircleLine(float x1, float y1, float x2, float y2, float circleX, float circleY, float r) {
     
     //参考URL
-    //https :/ /tjkendev.github.io/procon-library/python/geometry/circle_line_cross_point.html
+    //https://tjkendev.github.io/procon-library/python/geometry/circle_line_cross_point.html
     //傾きの算出
     float xd = x2 - x1;
     float yd = y2 - y1;
-    //円の公式(x ^ 2 + y ^ 2 = r ^ 2)への代入と整理
+    //円の公式(x ^ 2 + y^ 2 = r ^ 2)への代入と整理
     float x = x1 - circleX;
     float y = y1 - circleY;
     float a = xd * xd + yd * yd;
@@ -95,7 +98,7 @@ PVector[] GetCrossPoints_CircleLine(float x1, float y1, float x2, float y2, floa
         crossPoint[s] = new PVector(x1 + s1 * xd, y1 + s1 * yd);
         s++;
     }
-    if (s2 >= 0 && s2 <= 1)
+    if (s2 >= 0 && s2 <=  1)
         {
         crossPoint[s] = new PVector(x1 + s2 * xd, y1 + s2 * yd);
         s++;
