@@ -1,6 +1,6 @@
 void mouseMoved() {
     mousePos.set(mouseX - (width / 2),mouseY - (height / 2));
-    //circle.SetPos(mousePos);
+    circle.SetPos(mousePos);
 }
 
 //外積関数
@@ -16,7 +16,7 @@ PVector[] GetCrossPoints_CircleLine(float x1, float y1, float x2, float y2, floa
     //傾きの算出
     float xd = x2 - x1;
     float yd = y2 - y1;
-    //円の公式(x ^ 2 + y^ 2 = r ^ 2)への代入と整理
+    //円の公式(x^2 + y^2 = r^2)への代入と整理
     float x = x1 - circleX;
     float y = y1 - circleY;
     float a = xd * xd + yd * yd;
@@ -57,23 +57,33 @@ PVector GetCrossPoints_LineLine(PVector a, PVector b, PVector c, PVector d) {
 
 //円同士の交点算出
 PVector[] GetCrossPoints_CircleCircle(PVector c1, PVector c2, float r1, float r2) {
-    //参考URL：https://shogo82148.github.io/homepage/memo/geometry/line-circle.html
+    //参考URL：https://mathwords.net/ennokoten
     PVector[] crossPoint = new PVector[2];
+    float x1,x2,y1,y2;
+    float u,v,a,b,c,d;
     
-    //ax + by + c = 0の直線
-    //円同士の2交点を通る直線の式
-    float a = -2 * (c1.x - c2.x);
-    float b = -2 * (c1.y - c2.y);
-    float c = -(r1 * r1 - r2 * r2);
+    //(x-a)^2 + (y-b)^2 = r1^2と
+    //(x-c)^2 + (y-d)^2 = r2^2を連立させたことによって求められる
+    //y = -(a-c)/(b-d)x + (a^2 + b^2 - c^2 - d^2 - r1^2 r2^2)/(b-d)
+    //0除算は未対応
+    u = -(c1.x - c2.x) / (c1.y - c2.y);
+    v = (c1.x * c1.x + c1.y * c1.y - c2.x * c2.x - c2.y * c2.y - r1 * r1 + r2 * r2) / 2.0 / (c1.y - c2.y);
+    a = 1 + u * u;
+    b = u * v - u * c1.y - c1.x;
+    c = c1.x * c1.x + v * v + c1.y * c1.y - r1 * r1 - 2 * c1.y * v;
+    d = b * b - a * c;
+    x1 = ( -b + sqrt(d)) / a;
+    x2 = ( -b - sqrt(d)) / a;
+    y1 = u * x1 + v;
+    y2 = u * x2 + v;
     
-    //直線を線分化
-    float x1 = -width / 2;
-    float x2 = width / 2;
-    float y1 = -a / b * x1 - c / b;
-    float y2 = -a / b * x2 - c / b;
-    line(x1,y1,x2,y2);
+    //判別式Dが0未満の時は虚数解なのでスルー
+    if (d >= 0.0) {
+        crossPoint[0] = new PVector(x1,y1);
+        crossPoint[1] = new PVector(x2,y2);
+    }
     
-    return GetCrossPoints_CircleLine(x1,y1,x2,y2,c1.x,c1.y,r1);
+    return crossPoint;
 }
 
 // 扇形構成要素(外円、内円、二線分)と四角形の交点算出
@@ -166,8 +176,8 @@ PVector RotateMatrix(float theta, PVector v) {
 }
 
 //次の条件の時、扇形の中の点を返す
-//0 <= s<= 1
-//0 <= t<= 1
+//0 <= s <= 1
+//0 <= t <= 1
 PVector SectorPoint(Sector2D f, float s, float t) {
     PVector v = PVector.add(PVector.sub(f.a,f.origin),PVector.mult(PVector.sub(f.b,f.a),s));
     PVector p = PVector.add(RotateMatrix(t * (f.theta - f.alpha),v),f.origin);

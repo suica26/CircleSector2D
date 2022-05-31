@@ -10,13 +10,13 @@ float s,t;
 /////////////////////////メインブロック///////////////////////////
 
 void settings() {
-    size(1000,1000);
+    size(1000,750);
 }
 
 void setup() {
-    fanShape = new Sector2D(radians( -60),radians(30),origin, 100,300);
+    fanShape = new Sector2D(radians( -60),radians(60),origin, 100,400);
     box = new MyBox(origin,150,150);
-    circle = new MyCircle(new PVector(50,50), 100);
+    circle = new MyCircle(new PVector(0,0), 100);
     
     objects.add(fanShape);
     //objects.add(box);
