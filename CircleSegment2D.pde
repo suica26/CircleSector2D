@@ -1,7 +1,9 @@
 PVector origin = new PVector(0,0);
 PVector mousePos = new PVector(0,0);
+ArrayList<MyObject> objects = new ArrayList<MyObject>();
 Sector2D fanShape;
 MyBox box;
+MyCircle circle;
 float epsilon = 0.01;
 float s,t;
 
@@ -12,9 +14,13 @@ void settings() {
 }
 
 void setup() {
-    textSize(32);
     fanShape = new Sector2D(radians( -60),radians(30),origin, 100,300);
     box = new MyBox(origin,150,150);
+    circle = new MyCircle(new PVector(50,50), 100);
+    
+    objects.add(fanShape);
+    //objects.add(box);
+    objects.add(circle);
 }
 
 void draw() {
@@ -23,25 +29,31 @@ void draw() {
     background(255);
     fill(255);
     
-    fanShape.DisplayShape();
-    box.DisplayShape();
-    
-    s = cos(radians(frameCount * 5)) / 2 + 0.5;
-    t = sin(radians(frameCount)) / 2 + 0.5;
-    
-    var p = SectorPoint(fanShape,s,t);
-    fill(255,0,0);
-    ellipse(p.x,p.y,10,10);
+    for (MyObject o : objects) {
+        o.DisplayShape();
+    }
     
     var start = millis();
     
-    ArrayList<PVector> points = GetCrossPoints_SectorBox(fanShape,box);
-    
+    ArrayList<PVector> crossPoints = new ArrayList<PVector>();
+    var sbP = GetCrossPoints_SectorBox(fanShape,box);
+    var scP = GetCrossPoints_SectorCircle(fanShape,circle);
+    /*
+    for (PVector sb : sbP) {
+    crossPoints.add(sb);
+}
     for (PVector v : box.v) {
-        points.add(v);
+    crossPoints.add(v);
+}
+    */
+    for (PVector sc : scP) {
+        crossPoints.add(sc);
+        if (frameCount % 20 == 0) {
+            println(sc);
+        }
     }
     
-    for (PVector point : points) {
+    for (PVector point : crossPoints) {
         fill(255,0,0);
         if (CheckPointInSector(fanShape,point))
             fill(0,255,0);
@@ -51,8 +63,9 @@ void draw() {
     var finish = millis();
     
     popMatrix();
-    fill(0);
+    /*
     if (frameCount % 20 == 0) {
-        println(finish - start);
-    }
+    println(finish - start);
+}
+    */
 }

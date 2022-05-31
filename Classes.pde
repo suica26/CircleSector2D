@@ -2,6 +2,7 @@
 class MyObject {
     public MyObject() {}
     void DisplayShape() {}
+    void SetPos(PVector position) {}
 }
 
 // 2D扇形
@@ -25,10 +26,10 @@ class Sector2D extends MyObject{
         r1 = radius1;
         r2 = radius2;
         
-        a = new PVector(r1 * cos(alpha), r1 * sin(alpha));
-        b = new PVector(r2 * cos(alpha), r2 * sin(alpha));
-        ad = new PVector(r1 * cos(theta), r1 * sin(theta));
-        bd = new PVector(r2 * cos(theta), r2 * sin(theta));
+        a = new PVector(r1 * cos(alpha) + origin.x, r1 * sin(alpha) + origin.y);
+        b = new PVector(r2 * cos(alpha) + origin.x, r2 * sin(alpha) + origin.y);
+        ad = new PVector(r1 * cos(theta) + origin.x, r1 * sin(theta) + origin.y);
+        bd = new PVector(r2 * cos(theta) + origin.x, r2 * sin(theta) + origin.y);
     }
     
     void DisplayShape() {
@@ -38,6 +39,15 @@ class Sector2D extends MyObject{
         fill(255);
         line(a.x, a.y, b.x, b.y); //回転前の線分
         line(ad.x, ad.y, bd.x, bd.y); //回転後の線分
+    }
+    
+    void SetPos(PVector position) {
+        origin.set(position);
+        
+        a.set(r1 * cos(alpha) + origin.x, r1 * sin(alpha) + origin.y);
+        b.set(r2 * cos(alpha) + origin.x, r2 * sin(alpha) + origin.y);
+        ad.set(r1 * cos(theta) + origin.x, r1 * sin(theta) + origin.y);
+        bd.set(r2 * cos(theta) + origin.x, r2 * sin(theta) + origin.y);
     }
 }
 
@@ -56,18 +66,18 @@ class MyBox extends MyObject{
         v[3] = new PVector(pos.x + w / 2, pos.y - h / 2);
     }
     
+    void DisplayShape() {
+        noFill();
+        rect(pos.x - w / 2, pos.y - h / 2, w, h);
+        fill(255);
+    }
+    
     void SetPos(PVector position) {
         pos.set(position);
         v[0].set(pos.x + w / 2, pos.y + h / 2);
         v[1].set(pos.x - w / 2, pos.y + h / 2);
         v[2].set(pos.x - w / 2, pos.y - h / 2);
         v[3].set(pos.x + w / 2, pos.y - h / 2);
-    }
-    
-    void DisplayShape() {
-        noFill();
-        rect(pos.x - w / 2, pos.y - h / 2, w, h);
-        fill(255);
     }
 }
 
@@ -83,6 +93,10 @@ class MyCircle extends MyObject{
         noFill();
         ellipse(p.x,p.y,r * 2,r * 2);
         fill(255);
+    }
+    
+    void SetPos(PVector position) {
+        p.set(position);
     }
 }
 
