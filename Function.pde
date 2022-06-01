@@ -10,7 +10,6 @@ float Cross(PVector a, PVector b) {
 
 //円と線分の交点算出
 PVector[] GetCrossPoints_CircleLine(float x1, float y1, float x2, float y2, float circleX, float circleY, float r) {
-    
     //参考URL
     //https://tjkendev.github.io/procon-library/python/geometry/circle_line_cross_point.html
     //傾きの算出
@@ -175,6 +174,7 @@ PVector RotateMatrix(float theta, PVector v) {
     return r;
 }
 
+//扇形関数 P(s,t) = R(tθ)L(s) + O
 //次の条件の時、扇形の中の点を返す
 //0 <= s <= 1
 //0 <= t <= 1
