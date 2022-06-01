@@ -1,6 +1,7 @@
 PVector origin = new PVector(0,0);
 PVector mousePos = new PVector(0,0);
 ArrayList<MyObject> objects = new ArrayList<MyObject>();
+ArrayList<MyObject> movingObjects = new ArrayList<MyObject>();
 Sector2D fanShape;
 MyBox box;
 MyCircle circle;
@@ -18,9 +19,9 @@ void setup() {
     box = new MyBox(origin,150,150);
     circle = new MyCircle(new PVector(0,0), 100);
     
-    objects.add(fanShape);
-    //objects.add(box);
-    objects.add(circle);
+    RegistObjList(fanShape,false);
+    RegistObjList(box,true);
+    RegistObjList(circle,true);
 }
 
 void draw() {
@@ -47,7 +48,7 @@ void draw() {
     for (PVector sc : scP) {
         crossPoints.add(sc);
     }
-    crossPoints.add(circle.p);
+    crossPoints.add(circle.position);
     for (PVector point : crossPoints) {
         fill(255,0,0);
         if (CheckPointInSector(fanShape,point))
@@ -58,7 +59,7 @@ void draw() {
     var finish = millis();
     
     popMatrix();
-    if (frameCount % 20 == 0) {
+    if (frameCount % 60 == 0) {
         println("start:" + start);
         println("finish:" + finish);
         println("progressTime:" + (finish - start));

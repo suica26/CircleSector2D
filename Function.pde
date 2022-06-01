@@ -3,6 +3,11 @@ void mouseMoved() {
     circle.SetPos(mousePos);
 }
 
+void RegistObjList(MyObject o, boolean isMoving) {
+    objects.add(o);
+    if (isMoving) movingObjects.add(o);
+}
+
 //外積関数
 float Cross(PVector a, PVector b) {
     return a.x * b.y - a.y * b.x;
@@ -127,19 +132,19 @@ ArrayList<PVector> GetCrossPoints_SectorBox(Sector2D f,MyBox b) {
 ArrayList<PVector> GetCrossPoints_SectorCircle(Sector2D f, MyCircle c) {
     ArrayList<PVector> points = new ArrayList<PVector>();
     
-    for (PVector p : GetCrossPoints_CircleCircle(f.origin,c.p,f.r1,c.r)) {
+    for (PVector p : GetCrossPoints_CircleCircle(f.origin,c.position,f.r1,c.r)) {
         if (p!= null)
             points.add(p);
     } 
-    for (PVector p : GetCrossPoints_CircleCircle(f.origin,c.p,f.r2,c.r)) {
+    for (PVector p : GetCrossPoints_CircleCircle(f.origin,c.position,f.r2,c.r)) {
         if (p!= null)
             points.add(p);
     } 
-    for (PVector p : GetCrossPoints_CircleLine(f.a.x,f.a.y,f.b.x,f.b.y,c.p.x,c.p.y,c.r)) {
+    for (PVector p : GetCrossPoints_CircleLine(f.a.x,f.a.y,f.b.x,f.b.y,c.position.x,c.position.y,c.r)) {
         if (p!= null)
             points.add(p);
     } 
-    for (PVector p : GetCrossPoints_CircleLine(f.ad.x,f.ad.y,f.bd.x,f.bd.y,c.p.x,c.p.y,c.r)) {
+    for (PVector p : GetCrossPoints_CircleLine(f.ad.x,f.ad.y,f.bd.x,f.bd.y,c.position.x,c.position.y,c.r)) {
         if (p!= null)
             points.add(p);
     }

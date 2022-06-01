@@ -1,8 +1,9 @@
 // 基底クラス
 class MyObject {
+    PVector position;
     public MyObject() {}
     void DisplayShape() {}
-    void SetPos(PVector position) {}
+    void SetPos(PVector pos) {}
 }
 
 // 2D扇形
@@ -30,6 +31,7 @@ class Sector2D extends MyObject{
         b = new PVector(r2 * cos(alpha) + origin.x, r2 * sin(alpha) + origin.y);
         ad = new PVector(r1 * cos(theta) + origin.x, r1 * sin(theta) + origin.y);
         bd = new PVector(r2 * cos(theta) + origin.x, r2 * sin(theta) + origin.y);
+        position = PVector.div(PVector.add(PVector.add(a,b),PVector.add(ad,bd)),4);
     }
     
     void DisplayShape() {
@@ -41,8 +43,10 @@ class Sector2D extends MyObject{
         line(ad.x, ad.y, bd.x, bd.y); //回転後の線分
     }
     
-    void SetPos(PVector position) {
-        origin.set(position);
+    void SetPos(PVector pos) {
+        var PO = PVector.sub(origin,position);
+        position.set(pos);
+        origin = PVector.add(position,PO);
         
         a.set(r1 * cos(alpha) + origin.x, r1 * sin(alpha) + origin.y);
         b.set(r2 * cos(alpha) + origin.x, r2 * sin(alpha) + origin.y);
@@ -53,52 +57,50 @@ class Sector2D extends MyObject{
 
 //長方形
 class MyBox extends MyObject{
-    PVector pos;
     PVector[] v = new PVector[4];
     float w,h;
     
-    public MyBox(PVector position, float width, float height) {
-        pos = new PVector(position.x,position.y);
+    public MyBox(PVector pos, float width, float height) {
+        position = new PVector(pos.x,pos.y);
         w = width;
         h = height;
-        v[0] = new PVector(pos.x + w / 2, pos.y + h / 2);
-        v[1] = new PVector(pos.x - w / 2, pos.y + h / 2);
-        v[2] = new PVector(pos.x - w / 2, pos.y - h / 2);
-        v[3] = new PVector(pos.x + w / 2, pos.y - h / 2);
+        v[0] = new PVector(position.x + w / 2, position.y + h / 2);
+        v[1] = new PVector(position.x - w / 2, position.y + h / 2);
+        v[2] = new PVector(position.x - w / 2, position.y - h / 2);
+        v[3] = new PVector(position.x + w / 2, position.y - h / 2);
     }
     
     void DisplayShape() {
         noFill();
-        rect(pos.x - w / 2, pos.y - h / 2, w, h);
+        rect(position.x - w / 2, position.y - h / 2, w, h);
         fill(255);
     }
     
-    void SetPos(PVector position) {
-        pos.set(position);
-        v[0].set(pos.x + w / 2, pos.y + h / 2);
-        v[1].set(pos.x - w / 2, pos.y + h / 2);
-        v[2].set(pos.x - w / 2, pos.y - h / 2);
-        v[3].set(pos.x + w / 2, pos.y - h / 2);
+    void SetPos(PVector pos) {
+        position.set(pos);
+        v[0].set(position.x + w / 2, position.y + h / 2);
+        v[1].set(position.x - w / 2, position.y + h / 2);
+        v[2].set(position.x - w / 2, position.y - h / 2);
+        v[3].set(position.x + w / 2, position.y - h / 2);
     }
 }
 
 //円
 class MyCircle extends MyObject{
-    PVector p;
     float r;
-    public MyCircle(PVector position, float radius) {
-        p = new PVector(position.x,position.y);
+    public MyCircle(PVector pos, float radius) {
+        this.position = new PVector(pos.x,pos.y);
         r = radius;
     }
     
     void DisplayShape() {
         noFill();
-        ellipse(p.x,p.y,r * 2,r * 2);
+        ellipse(position.x,position.y,r * 2,r * 2);
         fill(255);
     }
     
-    void SetPos(PVector position) {
-        p.set(position);
+    void SetPos(PVector pos) {
+        position.set(pos);
     }
 }
 
