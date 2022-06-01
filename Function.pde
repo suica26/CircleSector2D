@@ -1,19 +1,22 @@
-void mouseMoved() {
-    mousePos.set(mouseX - (width / 2),mouseY - (height / 2));
-    circle.SetPos(mousePos);
+void keyPressed() {
+    if (keyCode == ' ') moveFlg *= -1;
 }
 
 void RegistObjList(MyObject o, boolean isMoving) {
     objects.add(o);
-    if (isMoving) movingObjects.add(o);
+    if (isMoving) {
+        movingObjects.add(o);
+        var v = new PVector(random( -1,1),random( -1,1));
+        moveVec.add(PVector.mult(v.normalize(),velocity));
+    }
 }
 
-//外積関数
+// 外積関数
 float Cross(PVector a, PVector b) {
     return a.x * b.y - a.y * b.x;
 }
 
-//円と線分の交点算出
+// 円と線分の交点算出
 PVector[] GetCrossPoints_CircleLine(float x1, float y1, float x2, float y2, float circleX, float circleY, float r) {
     //参考URL
     //https://tjkendev.github.io/procon-library/python/geometry/circle_line_cross_point.html
@@ -33,9 +36,9 @@ PVector[] GetCrossPoints_CircleLine(float x1, float y1, float x2, float y2, floa
     float s2 = ( -b - sqrt(d)) / a;
     
     PVector[] crossPoint = new PVector[2];
-    if (0 <= s1 && s1 <= 1)
+    if (0 <=  s1 && s1 <= 1)
         crossPoint[0] = new PVector(x1 + s1 * xd, y1 + s1 * yd);
-    if (0 <= s2 && s2 <= 1)
+    if (0 <=  s2 && s2 <= 1)
         crossPoint[1] = new PVector(x1 + s2 * xd, y1 + s2 * yd);
     
     return crossPoint;
@@ -154,9 +157,10 @@ ArrayList<PVector> GetCrossPoints_SectorCircle(Sector2D f, MyCircle c) {
 
 boolean CheckPointInSector(Sector2D f, PVector p) {
     //内円よりも外側にあるかどうか
-    if (p.mag() < f.r1 - epsilon) return false;
+    float length = PVector.sub(f.origin,p).mag();
+    if (length < f.r1 - epsilon) return false;
     //外円よりも内側にあるかどうか
-    if (p.mag() > f.r2 + epsilon) return false;
+    if (length > f.r2 + epsilon) return false;
     //回転方向で場合分け
     //正の回転の場合
     if (f.theta - f.alpha >= 0) {

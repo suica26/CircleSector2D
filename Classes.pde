@@ -1,9 +1,17 @@
 // 基底クラス
 class MyObject {
-    PVector position;
+    //オブジェクトの中心座標
+    PVector position = new PVector();
+    //回転角度(姿勢)
+    float angle = 0;
+    //コンストラクタ(未使用)
     public MyObject() {}
+    //図形描画関数
     void DisplayShape() {}
+    //中心設定関数
     void SetPos(PVector pos) {}
+    //回転角(ラジアン)を入力することで回転
+    void Rotate(float t) {}
 }
 
 // 2D扇形
@@ -31,16 +39,19 @@ class Sector2D extends MyObject{
         b = new PVector(r2 * cos(alpha) + origin.x, r2 * sin(alpha) + origin.y);
         ad = new PVector(r1 * cos(theta) + origin.x, r1 * sin(theta) + origin.y);
         bd = new PVector(r2 * cos(theta) + origin.x, r2 * sin(theta) + origin.y);
-        position = PVector.div(PVector.add(PVector.add(a,b),PVector.add(ad,bd)),4);
+        position = PVector.div(PVector.add(PVector.add(a,b),PVector.add(ad,bd)),4); //扇形の中心点(重心)
     }
     
     void DisplayShape() {
         noFill();
-        arc(origin.x, origin.y, r2 * 2, r2 * 2, alpha, theta);
-        arc(origin.x, origin.y, r1 * 2, r1 * 2, alpha, theta);
+        float al = alpha + angle;
+        float th = theta + angle;
+        arc(origin.x, origin.y, r2 * 2, r2 * 2, al, th);
+        arc(origin.x, origin.y, r1 * 2, r1 * 2, al, th);
         fill(255);
         line(a.x, a.y, b.x, b.y); //回転前の線分
         line(ad.x, ad.y, bd.x, bd.y); //回転後の線分
+        //ellipse(origin.x,origin.y,15,15); //回転中心
     }
     
     void SetPos(PVector pos) {
@@ -48,16 +59,31 @@ class Sector2D extends MyObject{
         position.set(pos);
         origin = PVector.add(position,PO);
         
-        a.set(r1 * cos(alpha) + origin.x, r1 * sin(alpha) + origin.y);
-        b.set(r2 * cos(alpha) + origin.x, r2 * sin(alpha) + origin.y);
-        ad.set(r1 * cos(theta) + origin.x, r1 * sin(theta) + origin.y);
-        bd.set(r2 * cos(theta) + origin.x, r2 * sin(theta) + origin.y);
+        float al = alpha + angle;
+        float th = theta + angle;
+        
+        a.set(r1 * cos(al) + origin.x, r1 * sin(al) + origin.y);
+        b.set(r2 * cos(al) + origin.x, r2 * sin(al) + origin.y);
+        ad.set(r1 * cos(th) + origin.x, r1 * sin(th) + origin.y);
+        bd.set(r2 * cos(th) + origin.x, r2 * sin(th) + origin.y);
+    }
+    
+    void Rotate(float t) {
+        //回転行列を利用して回転
+        a = PVector.add(RotateMatrix(t,PVector.sub(a,position)),position);
+        b = PVector.add(RotateMatrix(t,PVector.sub(b,position)),position);
+        ad = PVector.add(RotateMatrix(t,PVector.sub(ad,position)),position);
+        bd = PVector.add(RotateMatrix(t,PVector.sub(bd,position)),position);
+        origin = PVector.add(RotateMatrix(t,PVector.sub(origin,position)),position);
+        angle += t;
     }
 }
 
 //長方形
 class MyBox extends MyObject{
+    //頂点
     PVector[] v = new PVector[4];
+    //幅、高さ
     float w,h;
     
     public MyBox(PVector pos, float width, float height) {
@@ -77,16 +103,20 @@ class MyBox extends MyObject{
     }
     
     void SetPos(PVector pos) {
+        PVector tl = PVector.sub(pos,position);
         position.set(pos);
-        v[0].set(position.x + w / 2, position.y + h / 2);
-        v[1].set(position.x - w / 2, position.y + h / 2);
-        v[2].set(position.x - w / 2, position.y - h / 2);
-        v[3].set(position.x + w / 2, position.y - h / 2);
+        for (int i = 0;i < 4;i++) v[i] = PVector.add(v[0],tl);
+    }
+    
+    void Rotate(float t) {
+        for (int i = 0;i < 4;i++) v[i] = PVector.add(RotateMatrix(t,PVector.sub(v[i],position)),position);
+        angle += t;
     }
 }
 
-//円
+// 円
 class MyCircle extends MyObject{
+    //半径
     float r;
     public MyCircle(PVector pos, float radius) {
         this.position = new PVector(pos.x,pos.y);
@@ -102,5 +132,7 @@ class MyCircle extends MyObject{
     void SetPos(PVector pos) {
         position.set(pos);
     }
+    
+    void Rotate(float t) {angle += t;}
 }
 
