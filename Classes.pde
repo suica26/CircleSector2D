@@ -51,6 +51,7 @@ class Sector2D extends MyObject{
     }
 }
 
+//長方形
 class MyBox extends MyObject{
     PVector pos;
     PVector[] v = new PVector[4];
@@ -81,6 +82,7 @@ class MyBox extends MyObject{
     }
 }
 
+//円
 class MyCircle extends MyObject{
     PVector p;
     float r;
