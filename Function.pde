@@ -1,3 +1,15 @@
+/*
+関数記述用ファイル
+
+
+
+
+
+
+
+
+*/
+
 void keyPressed() {
     if (keyCode == ' ') moveFlg *= -1;
 }
