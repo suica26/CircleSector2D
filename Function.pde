@@ -1,14 +1,27 @@
-void mouseMoved() {
-    mousePos.set(mouseX - (width / 2),mouseY - (height / 2));
-    circle.SetPos(mousePos);
+void keyPressed() {
+    if (keyCode == ' ') moveFlg *= -1;
 }
 
-//外積関数
+void RegistObjList(MyObject o, boolean isMoving, boolean isRotating) {
+    objects.add(o);
+    if (isMoving) {
+        movingObjects.add(o);
+        var v = new PVector(random( -1,1),random( -1,1));
+        moveVec.add(PVector.mult(v.normalize(),velocity));
+    }
+    if (isRotating) {
+        rotatingObjects.add(o);
+        float rv = radians(random( -5,5));
+        rotVec.append(rv);
+    }
+}
+
+// 外積関数
 float Cross(PVector a, PVector b) {
     return a.x * b.y - a.y * b.x;
 }
 
-//円と線分の交点算出
+// 円と線分の交点算出
 PVector[] GetCrossPoints_CircleLine(float x1, float y1, float x2, float y2, float circleX, float circleY, float r) {
     //参考URL
     //https://tjkendev.github.io/procon-library/python/geometry/circle_line_cross_point.html
@@ -28,9 +41,9 @@ PVector[] GetCrossPoints_CircleLine(float x1, float y1, float x2, float y2, floa
     float s2 = ( -b - sqrt(d)) / a;
     
     PVector[] crossPoint = new PVector[2];
-    if (0 <= s1 && s1 <= 1)
+    if (0 <=  s1 && s1 <= 1)
         crossPoint[0] = new PVector(x1 + s1 * xd, y1 + s1 * yd);
-    if (0 <= s2 && s2 <= 1)
+    if (0 <=  s2 && s2 <= 1)
         crossPoint[1] = new PVector(x1 + s2 * xd, y1 + s2 * yd);
     
     return crossPoint;
@@ -127,19 +140,19 @@ ArrayList<PVector> GetCrossPoints_SectorBox(Sector2D f,MyBox b) {
 ArrayList<PVector> GetCrossPoints_SectorCircle(Sector2D f, MyCircle c) {
     ArrayList<PVector> points = new ArrayList<PVector>();
     
-    for (PVector p : GetCrossPoints_CircleCircle(f.origin,c.p,f.r1,c.r)) {
+    for (PVector p : GetCrossPoints_CircleCircle(f.origin,c.position,f.r1,c.r)) {
         if (p!= null)
             points.add(p);
     } 
-    for (PVector p : GetCrossPoints_CircleCircle(f.origin,c.p,f.r2,c.r)) {
+    for (PVector p : GetCrossPoints_CircleCircle(f.origin,c.position,f.r2,c.r)) {
         if (p!= null)
             points.add(p);
     } 
-    for (PVector p : GetCrossPoints_CircleLine(f.a.x,f.a.y,f.b.x,f.b.y,c.p.x,c.p.y,c.r)) {
+    for (PVector p : GetCrossPoints_CircleLine(f.a.x,f.a.y,f.b.x,f.b.y,c.position.x,c.position.y,c.r)) {
         if (p!= null)
             points.add(p);
     } 
-    for (PVector p : GetCrossPoints_CircleLine(f.ad.x,f.ad.y,f.bd.x,f.bd.y,c.p.x,c.p.y,c.r)) {
+    for (PVector p : GetCrossPoints_CircleLine(f.ad.x,f.ad.y,f.bd.x,f.bd.y,c.position.x,c.position.y,c.r)) {
         if (p!= null)
             points.add(p);
     }
@@ -147,11 +160,13 @@ ArrayList<PVector> GetCrossPoints_SectorCircle(Sector2D f, MyCircle c) {
     return points;
 }
 
+//扇形と点の内外判定
 boolean CheckPointInSector(Sector2D f, PVector p) {
     //内円よりも外側にあるかどうか
-    if (p.mag() < f.r1 - epsilon) return false;
+    float length = PVector.sub(f.origin,p).mag();
+    if (length < f.r1 - epsilon) return false;
     //外円よりも内側にあるかどうか
-    if (p.mag() > f.r2 + epsilon) return false;
+    if (length > f.r2 + epsilon) return false;
     //回転方向で場合分け
     //正の回転の場合
     if (f.theta - f.alpha >= 0) {
@@ -166,6 +181,21 @@ boolean CheckPointInSector(Sector2D f, PVector p) {
     return true;
 }
 
+//長方形と点の内外判定
+boolean CheckPointInBox(MyBox b, PVector p) {
+    for (int i = 0;i < 3;i++) {
+        if (Cross(PVector.sub(b.v[i + 1],b.v[i]),PVector.sub(p,b.v[i])) < 0) return false;
+    } 
+    if (Cross(PVector.sub(b.v[0],b.v[3]),PVector.sub(p,b.v[3])) < 0) return false;
+    return true;
+}
+
+// 円と点の内外判定
+boolean CheckPointInCircle(MyCircle c, PVector p) {
+    if (PVector.sub(p,c.position).mag() > c.r) return false;
+    return true;
+}
+
 // 回転行列
 PVector RotateMatrix(float theta, PVector v) {
     float x = v.x * cos(theta) - v.y * sin(theta);
@@ -174,7 +204,7 @@ PVector RotateMatrix(float theta, PVector v) {
     return r;
 }
 
-//扇形関数 P(s,t) = R(tθ)L(s) + O
+// 扇形関数 P(s,t) = R(tθ)L(s) + O
 //次の条件の時、扇形の中の点を返す
 //0 <= s <= 1
 //0 <= t <= 1
