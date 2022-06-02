@@ -2,12 +2,17 @@ void keyPressed() {
     if (keyCode == ' ') moveFlg *= -1;
 }
 
-void RegistObjList(MyObject o, boolean isMoving) {
+void RegistObjList(MyObject o, boolean isMoving, boolean isRotating) {
     objects.add(o);
     if (isMoving) {
         movingObjects.add(o);
         var v = new PVector(random( -1,1),random( -1,1));
         moveVec.add(PVector.mult(v.normalize(),velocity));
+    }
+    if (isRotating) {
+        rotatingObjects.add(o);
+        float rv = radians(random( -5,5));
+        rotVec.append(rv);
     }
 }
 
@@ -155,6 +160,7 @@ ArrayList<PVector> GetCrossPoints_SectorCircle(Sector2D f, MyCircle c) {
     return points;
 }
 
+//扇形と点の内外判定
 boolean CheckPointInSector(Sector2D f, PVector p) {
     //内円よりも外側にあるかどうか
     float length = PVector.sub(f.origin,p).mag();
@@ -175,6 +181,21 @@ boolean CheckPointInSector(Sector2D f, PVector p) {
     return true;
 }
 
+//長方形と点の内外判定
+boolean CheckPointInBox(MyBox b, PVector p) {
+    for (int i = 0;i < 3;i++) {
+        if (Cross(PVector.sub(b.v[i + 1],b.v[i]),PVector.sub(p,b.v[i])) < 0) return false;
+    } 
+    if (Cross(PVector.sub(b.v[0],b.v[3]),PVector.sub(p,b.v[3])) < 0) return false;
+    return true;
+}
+
+// 円と点の内外判定
+boolean CheckPointInCircle(MyCircle c, PVector p) {
+    if (PVector.sub(p,c.position).mag() > c.r) return false;
+    return true;
+}
+
 // 回転行列
 PVector RotateMatrix(float theta, PVector v) {
     float x = v.x * cos(theta) - v.y * sin(theta);
@@ -183,7 +204,7 @@ PVector RotateMatrix(float theta, PVector v) {
     return r;
 }
 
-//扇形関数 P(s,t) = R(tθ)L(s) + O
+// 扇形関数 P(s,t) = R(tθ)L(s) + O
 //次の条件の時、扇形の中の点を返す
 //0 <= s <= 1
 //0 <= t <= 1

@@ -28,7 +28,7 @@ class Sector2D extends MyObject{
     //ad,bdは回転後の位置ベクトル
     PVector a,b,ad,bd;
     
-    public Sector2D(float alpha, float theta, PVector origin, float radius1, float radius2) {
+    public Sector2D(float alpha, float theta, PVector origin, float radius1, float radius2, boolean isMoving, boolean isRotating) {
         this.alpha = alpha;
         this.theta = theta;
         this.origin = new PVector(origin.x,origin.y);
@@ -40,6 +40,9 @@ class Sector2D extends MyObject{
         ad = new PVector(r1 * cos(theta) + origin.x, r1 * sin(theta) + origin.y);
         bd = new PVector(r2 * cos(theta) + origin.x, r2 * sin(theta) + origin.y);
         position = PVector.div(PVector.add(PVector.add(a,b),PVector.add(ad,bd)),4); //扇形の中心点(重心)
+        
+        sectors.add(this);
+        RegistObjList(this, isMoving, isRotating);
     }
     
     void DisplayShape() {
@@ -86,7 +89,7 @@ class MyBox extends MyObject{
     //幅、高さ
     float w,h;
     
-    public MyBox(PVector pos, float width, float height) {
+    public MyBox(PVector pos, float width, float height, boolean isMoving, boolean isRotating) {
         position = new PVector(pos.x,pos.y);
         w = width;
         h = height;
@@ -94,18 +97,23 @@ class MyBox extends MyObject{
         v[1] = new PVector(position.x - w / 2, position.y + h / 2);
         v[2] = new PVector(position.x - w / 2, position.y - h / 2);
         v[3] = new PVector(position.x + w / 2, position.y - h / 2);
+        
+        boxes.add(this);
+        RegistObjList(this,isMoving, isRotating);
     }
     
     void DisplayShape() {
-        noFill();
-        rect(position.x - w / 2, position.y - h / 2, w, h);
-        fill(255);
+        stroke(0);
+        for (int i = 0;i < 3;i++) {
+            line(v[i + 1].x,v[i + 1].y,v[i].x,v[i].y);
+        }
+        line(v[3].x,v[3].y,v[0].x,v[0].y);
     }
     
     void SetPos(PVector pos) {
         PVector tl = PVector.sub(pos,position);
         position.set(pos);
-        for (int i = 0;i < 4;i++) v[i] = PVector.add(v[0],tl);
+        for (int i = 0;i < 4;i++) v[i] = PVector.add(v[i],tl);
     }
     
     void Rotate(float t) {
@@ -118,9 +126,12 @@ class MyBox extends MyObject{
 class MyCircle extends MyObject{
     //半径
     float r;
-    public MyCircle(PVector pos, float radius) {
+    public MyCircle(PVector pos, float radius, boolean isMoving) {
         this.position = new PVector(pos.x,pos.y);
         r = radius;
+        
+        circles.add(this);
+        RegistObjList(this,isMoving,false);
     }
     
     void DisplayShape() {
