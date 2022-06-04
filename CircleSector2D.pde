@@ -11,19 +11,23 @@
 */
 
 void settings() {
-    size(1000,750);
+    size(1200,900);
 }
 
 void setup() {
     //オブジェクト宣言
-    for (int i = 0;i < 1;i++) {
-        var sector = new Sector2D(radians(random( -90,0)),radians(random(0,90)),new PVector(0,0),random(0,100),random(100,200),false, false);
+    for (int i = 0;i < 30;i++) {
+        var sector = new Sector2D(radians(random( -90,0)),radians(random(0,90)),new PVector(0,0),random(0,100),random(100,200),true, true);
     }
-    for (int j = 0;j < 10;j++) {
-        var box = new MyBox(new PVector(0,0),random(30,300),random(30,300),true, true);
+    for (int y = 0;y <= ls;y++) {
+        for (int x = 0;x <=  ls;x++) {
+            var box = new MyBox(new PVector( -width / 2.0 + x * width / float(ls), -height / 2.0 + y * height / float(ls)),width / float(ls),height / float(ls),false, false);
+        }
     }
-    for (int k = 0;k < 0;k++) {
-        var circle = new MyCircle(new PVector(0,0),random(20,100),true);
+    for (int y = 0;y < ls;y++) {
+        for (int x = 0;x <=  ls;x++) {
+            var circle = new MyCircle(new PVector( -width / 2.0 + x * width / float(ls), -height / 2.0 + y * height / float(ls)),25,false);
+        }
     }
     
     //格子状に点を配置(扇形範囲の確認用)

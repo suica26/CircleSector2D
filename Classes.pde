@@ -51,7 +51,7 @@ class Sector2D extends MyObject{
         b = new PVector(r2 * cos(alpha) + origin.x, r2 * sin(alpha) + origin.y);
         ad = new PVector(r1 * cos(theta) + origin.x, r1 * sin(theta) + origin.y);
         bd = new PVector(r2 * cos(theta) + origin.x, r2 * sin(theta) + origin.y);
-        position = PVector.div(PVector.add(PVector.add(a,b),PVector.add(ad,bd)),4); //扇形の中心点(重心)
+        position = PVector.mult(PVector.add(PVector.sub(a,origin),PVector.sub(ad,origin)).normalize(),(r2 + r1) / 2.0); //扇形の中心点(重心)
         
         sectors.add(this);
         RegistObjList(this, isMoving, isRotating);

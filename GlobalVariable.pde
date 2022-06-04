@@ -23,3 +23,4 @@ float epsilon = 0.01;                                               //計算誤�
 float s,t;                                                          //扇形のパラメトリック表現用の変数
 float velocity = 5.0;                                               //動くオブジェクトの移動速度
 int moveFlg = 1;                                                    //オブジェクト動作停止用フラグ
+int ls = 50;                                                        //格子のサイズ
