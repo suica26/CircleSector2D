@@ -11,7 +11,8 @@
 */
 
 void keyPressed() {
-    if (keyCode == ' ') moveFlg *= -1;
+    if (keyCode == ' ') moveFlg = !moveFlg;
+    if (key == 'd') display = !display;
 }
 
 void RegistObjList(MyObject o, boolean isMoving, boolean isRotating) {

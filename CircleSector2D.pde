@@ -15,46 +15,48 @@ void settings() {
 }
 
 void setup() {
+    var sector = new Sector2D(radians( -60),radians(60),new PVector(0,0),0,400,false,true);
     //オブジェクト宣言
-    for (int i = 0;i < 30;i++) {
-        var sector = new Sector2D(radians(random( -90,0)),radians(random(0,90)),new PVector(0,0),random(0,100),random(100,200),true, true);
+    for (int i = 0;i < 0;i++) {
+        //var sector = new Sector2D(radians(random( -90,0)),radians(random(0,90)),new PVector(0,0),random(0,100),random(100,200),true, true);
     }
     for (int y = 0;y <= ls;y++) {
-        for (int x = 0;x <=  ls;x++) {
+        for (int x = 0;x <= ls;x++) {
             var box = new MyBox(new PVector( -width / 2.0 + x * width / float(ls), -height / 2.0 + y * height / float(ls)),width / float(ls),height / float(ls),false, false);
         }
     }
-    for (int y = 0;y < ls;y++) {
-        for (int x = 0;x <=  ls;x++) {
-            var circle = new MyCircle(new PVector( -width / 2.0 + x * width / float(ls), -height / 2.0 + y * height / float(ls)),25,false);
+    for (int y = 0;y < 0;y++) {
+        for (int x = 0;x <=  0;x++) {
+            var circle = new MyCircle(new PVector( -width / 2.0 + x * width / float(ls), -height / 2.0 + y * height / float(ls)),8,false);
         }
     }
-    
-    //格子状に点を配置(扇形範囲の確認用)
     /*
-    for (int x = 0; x <= 50; x++) {
-    for (int y = 0;y <= 50;y++) {
-    latticePoints.add(new PVector( -width / 2.0 + x * width / 50.0, -height / 2.0 + y * height / 50.0));
+    for (int i = 0; i < 10;i++) {
+    var box = new MyBox(new PVector(0, 0),random(20,100),random(20,100),true, true);
 }
+    for (int i = 0; i < 10;i++) {
+    var circle = newMyCircle(new PVector(0, 0),random(10,100),true);
 }
     */
 }
 
+
 void draw() {
-    pushMatrix();
-    translate(width / 2, height / 2);   //描画座標軸の変更
+    translate(width / 2,height / 2);   //描画座標軸の変更
     background(255);
     fill(255);
     
-    //図形描画
-    for (MyObject o : objects) {
-        o.DisplayShape();
+    // 図形描画
+    if (display) {
+        for (MyObject o : objects) {
+            o.DisplayShape();
+        }
     }
     
     int vl = movingObjects.size();
     int rl = rotatingObjects.size();
-    //図形の運動
-    if (moveFlg > 0) {
+    // 図形の運動
+    if (moveFlg) {
         //図形の平行移動
         for (int i = 0;i < vl;i++) {
             var movePos = PVector.add(movingObjects.get(i).position,moveVec.get(i));
@@ -75,13 +77,15 @@ void draw() {
     //扇形との干渉内容のリスト
     IntList judgeIDs = new IntList();
     //judgeIDsに格納するための判定ID
-    //0:干渉していない
-    //1:長方形と扇形が交差
-    //2:長方形に扇形の中心点が入っている
-    //3:扇形に長方形の中心点が入っている
-    //4:円と扇形が交差
-    //5:円に扇形の中心点が入っている
-    //6:扇形に円の中心点が入っている
+    /*
+    0 : 干渉していない
+    1 : 長方形と扇形が交差
+    2 : 長方形に扇形の中心点が入っている
+    3 : 扇形に長方形の中心点が入っている
+    4 : 円と扇形が交差
+    5 : 円に扇形の中心点が入っている
+    6 : 扇形に円の中心点が入っている
+    */
     int judgeID = 0;
     
     //毎回ArratListのメンバ関数にアクセスする必要はないので、変数格納
@@ -99,28 +103,28 @@ void draw() {
             //扇形と長方形が交差しているかのチェック
             var sbP = GetCrossPoints_SectorBox(s,b);
             for (PVector p : sbP) {
-                judgeID = 0;    //初期値化
+                judgeID = 0;//初期値化
                 checkPoints.add(p);
-                //扇形内外判定
-                if (CheckPointInSector(s,p)) judgeID = 1;
+                // 扇形内外判定
+                if (CheckPointInSector(s,p))judgeID = 1;
                 judgeIDs.append(judgeID);
             }
             
-            //長方形に扇形が覆われているかのチェック
-            judgeID = 0;    //初期値化
+            // 長方形に扇形が覆われているかのチェック
+            judgeID = 0;//初期値化
             checkPoints.add(s.position);
             if (CheckPointInBox(b,s.position)) judgeID = 2;
             judgeIDs.append(judgeID);
             
-            //扇形に長方形が覆われているかのチェック
-            judgeID = 0;    //初期値化
+            // 扇形に長方形が覆われているかのチェック
+            judgeID = 0;//初期値化
             checkPoints.add(b.position);
             if (CheckPointInSector(s,b.position)) judgeID = 3;
             judgeIDs.append(judgeID);
         }
     }
     
-    //扇形と円の干渉判定
+    // 扇形と円の干渉判定
     for (int i = 0;i < sSize;i++) {
         for (int j = 0;j < cSize;j++) {
             //配列の長さ取得と同様の理由
@@ -161,31 +165,22 @@ void draw() {
         println("progressTime:" + (finish - start));
     }
     
-    //格子点との内外判定
-    /*
-    for (PVector point : latticePoints) {
-    fill(255,0,0);
-    if (CheckPointInSector(fanShape,point))
-    fill(0,255,0);
-    ellipse(point.x,point.y, 8, 8);
-}
-    */
-    
     //干渉点の描画
-    int pSize = checkPoints.size();
-    for (int i = 0;i < pSize;i++) {
-        int jID = judgeIDs.get(i);
-        if (jID == 0) continue;
-        switch(jID) {
-            case 1 : fill(0,255,0); break;
-            case 2 : fill(127,255,0); break;
-            case 3 : fill(255,127,0); break;
-            case 4 : fill(0,0,255); break;
-            case 5 : fill(127,0,255); break;
-            case 6 : fill(255,0,127); break;
+    if (display) {
+        int pSize = checkPoints.size();
+        for (int i = 0;i < pSize;i++) {
+            int jID = judgeIDs.get(i);
+            if (jID == 0) continue;
+            switch(jID) {
+                case 1 : fill(0,255,0); break;
+                case 2 : fill(127,255,0); break;
+                case 3 : fill(255,127,0); break;
+                case 4 : fill(0,0,255); break;
+                case 5 : fill(127,0,255); break;
+                case 6 : fill(255,0,127); break;
+            }
+            var p = checkPoints.get(i);
+            ellipse(p.x,p.y,8,8);
         }
-        var p = checkPoints.get(i);
-        ellipse(p.x,p.y,8,8);
     }
-    popMatrix();
 }

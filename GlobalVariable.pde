@@ -22,5 +22,6 @@ ArrayList<PVector> latticePoints = new ArrayList<PVector>();        //扇形範�
 float epsilon = 0.01;                                               //計算誤差補正値
 float s,t;                                                          //扇形のパラメトリック表現用の変数
 float velocity = 5.0;                                               //動くオブジェクトの移動速度
-int moveFlg = 1;                                                    //オブジェクト動作停止用フラグ
+boolean moveFlg = true;                                             //オブジェクト動作停止用フラグ
 int ls = 50;                                                        //格子のサイズ
+boolean display = true;                                             //描画切り替えフラグ
