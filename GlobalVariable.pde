@@ -25,3 +25,7 @@ float velocity = 5.0;                                               //動くオ�
 boolean moveFlg = true;                                             //オブジェクト動作停止用フラグ
 int ls = 50;                                                        //格子のサイズ
 boolean display = true;                                             //描画切り替えフラグ
+MyBox willRotateBox;                                                //回転前長方形
+MyBox RotatedBox;                                                   //回転後長方形
+PVector[] AABBpoints = new PVector[8];                              //AABB計算用頂点
+MyBox AABB;                                                         //AABBボックス

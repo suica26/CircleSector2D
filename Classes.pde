@@ -24,6 +24,7 @@ class MyObject {
     void SetPos(PVector pos) {}
     //回転角(ラジアン)を入力することで回転
     void Rotate(float t) {}
+    void RotateWithVec(float t, PVector o) {}
 }
 
 // 2D扇形
@@ -40,7 +41,7 @@ class Sector2D extends MyObject{
     //ad,bdは回転後の位置ベクトル
     PVector a,b,ad,bd;
     
-    public Sector2D(float alpha, float theta, PVector origin, float radius1, float radius2, boolean isMoving, boolean isRotating) {
+    public Sector2D(float alpha, float theta, PVector origin, float radius1, float radius2, boolean isRegisted, boolean isMoving, boolean isRotating) {
         this.alpha = alpha;
         this.theta = theta;
         this.origin = new PVector(origin.x,origin.y);
@@ -53,7 +54,8 @@ class Sector2D extends MyObject{
         bd = new PVector(r2 * cos(theta) + origin.x, r2 * sin(theta) + origin.y);
         position = PVector.mult(PVector.add(PVector.sub(a,origin),PVector.sub(ad,origin)).normalize(),(r2 + r1) / 2.0); //扇形の中心点(重心)
         
-        sectors.add(this);
+        //オブジェクトリストに登録するかどうか
+        if (isRegisted) sectors.add(this);
         RegistObjList(this, isMoving, isRotating);
     }
     
@@ -92,16 +94,33 @@ class Sector2D extends MyObject{
         origin = PVector.add(RotateMatrix(t,PVector.sub(origin,position)),position);
         angle += t;
     }
+    
+    void RotateWithVec(float t, PVector o) {
+        //回転中心を原点に移動
+        var movePos = PVector.sub(new PVector(0,0),o);
+        SetPos(PVector.add(position,movePos));
+        
+        //回転
+        a = RotateMatrix(t,a);
+        b = RotateMatrix(t,b);
+        ad = RotateMatrix(t,ad);
+        bd = RotateMatrix(t,bd);
+        origin = RotateMatrix(t,origin);
+        angle += t;
+        
+        //回転中心をもとの座標に戻す
+        SetPos(PVector.sub(position, movePos));
+    }
 }
 
-//長方形
+// 長方形
 class MyBox extends MyObject{
     //頂点
     PVector[] v = new PVector[4];
     //幅、高さ
     float w,h;
     
-    public MyBox(PVector pos, float width, float height, boolean isMoving, boolean isRotating) {
+    public MyBox(PVector pos, float width, float height, boolean isRegisted, boolean isMoving, boolean isRotating) {
         position = new PVector(pos.x,pos.y);
         w = width;
         h = height;
@@ -110,7 +129,8 @@ class MyBox extends MyObject{
         v[2] = new PVector(position.x - w / 2, position.y - h / 2);
         v[3] = new PVector(position.x + w / 2, position.y - h / 2);
         
-        boxes.add(this);
+        //オブジェクトリストに登録するかどうか
+        if (isRegisted) boxes.add(this);
         RegistObjList(this,isMoving, isRotating);
     }
     
@@ -132,17 +152,31 @@ class MyBox extends MyObject{
         for (int i = 0;i < 4;i++) v[i] = PVector.add(RotateMatrix(t,PVector.sub(v[i],position)),position);
         angle += t;
     }
+    
+    void RotateWithVec(float t, PVector o) {
+        //回転中心を原点に移動
+        var movePos = PVector.sub(new PVector(0,0),o);
+        SetPos(PVector.add(position,movePos));
+        
+        //回転
+        for (int i = 0;i < 4;i++) v[i] = RotateMatrix(t,v[i]);
+        angle += t;
+        
+        //回転中心をもとの座標に戻す
+        SetPos(PVector.sub(position, movePos));
+    }
 }
 
 // 円
 class MyCircle extends MyObject{
     //半径
     float r;
-    public MyCircle(PVector pos, float radius, boolean isMoving) {
+    public MyCircle(PVector pos, float radius, boolean isRegisted, boolean isMoving) {
         this.position = new PVector(pos.x,pos.y);
         r = radius;
         
-        circles.add(this);
+        //オブジェクトリストに登録するかどうか
+        if (isRegisted) circles.add(this);        
         RegistObjList(this,isMoving,false);
     }
     
@@ -157,5 +191,18 @@ class MyCircle extends MyObject{
     }
     
     void Rotate(float t) {angle += t;}
+    
+    void RotateWithVec(float t, PVector o) {
+        //回転中心を原点に移動
+        var movePos = PVector.sub(new PVector(0,0),o);
+        SetPos(PVector.add(position,movePos));
+        
+        //回転
+        position = RotateMatrix(t,position);
+        angle += t;
+        
+        //回転中心をもとの座標に戻す
+        SetPos(PVector.sub(position, movePos));
+    }
 }
 

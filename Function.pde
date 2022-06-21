@@ -34,6 +34,24 @@ float Cross(PVector a, PVector b) {
     return a.x * b.y - a.y * b.x;
 }
 
+//線分と線分の交点
+PVector GetCrossPoints_LineLine(PVector a, PVector b, PVector c, PVector d) {
+    //参考URL
+    //https :/ /qiita.com/zu_rin/items/09876d2c7ec12974bc0f
+    float s,t;
+    float deno = Cross(PVector.sub(b,a),PVector.sub(d,c));
+    //線分が平行な場合はnull
+    if (deno == 0.0) return null;
+    
+    s = Cross(PVector.sub(c,a),PVector.sub(d,c)) / deno;
+    t = Cross(PVector.sub(b,a),PVector.sub(a,c)) / deno;
+    
+    //線分が交差していない場合
+    if (s < 0.0 || 1.0 < s || t < 0.0 ||  1.0 < t) return null;
+    
+    return PVector.add(a,PVector.mult(PVector.sub(b,a),s));
+}
+
 // 円と線分の交点算出
 PVector[] GetCrossPoints_CircleLine(float x1, float y1, float x2, float y2, float circleX, float circleY, float r) {
     //参考URL
@@ -60,24 +78,6 @@ PVector[] GetCrossPoints_CircleLine(float x1, float y1, float x2, float y2, floa
         crossPoint[1] = new PVector(x1 + s2 * xd, y1 + s2 * yd);
     
     return crossPoint;
-}
-
-//線分と線分の交点
-PVector GetCrossPoints_LineLine(PVector a, PVector b, PVector c, PVector d) {
-    //参考URL
-    //https :/ /qiita.com/zu_rin/items/09876d2c7ec12974bc0f
-    float s,t;
-    float deno = Cross(PVector.sub(b,a),PVector.sub(d,c));
-    //線分が平行な場合はnull
-    if (deno == 0.0) return null;
-    
-    s = Cross(PVector.sub(c,a),PVector.sub(d,c)) / deno;
-    t = Cross(PVector.sub(b,a),PVector.sub(a,c)) / deno;
-    
-    //線分が交差していない場合
-    if (s < 0.0 || 1.0 < s || t < 0.0 ||  1.0 < t) return null;
-    
-    return PVector.add(a,PVector.mult(PVector.sub(b,a),s));
 }
 
 //円同士の交点算出
@@ -115,36 +115,34 @@ PVector[] GetCrossPoints_CircleCircle(PVector c1, PVector c2, float r1, float r2
 ArrayList<PVector> GetCrossPoints_SectorBox(Sector2D f,MyBox b) {
     //円と線分の交差点算出
     ArrayList<PVector> points = new ArrayList<PVector>();
-    for (int i = 0;i < 3;i++) {
-        var p1 = GetCrossPoints_CircleLine(b.v[i].x,b.v[i].y,b.v[i + 1].x,b.v[i + 1].y,f.origin.x,f.origin.y,f.r1);
-        var p2 = GetCrossPoints_CircleLine(b.v[i].x,b.v[i].y,b.v[i + 1].x,b.v[i + 1].y,f.origin.x,f.origin.y,f.r2);
+    for (int i = 0;i < 4;i++) {
+        int e1,e2;
+        e1 = i;
+        if (i ==  3) e2 = 0; 
+        else e2 = i + 1;
+        
+        var p1 = GetCrossPoints_CircleLine(b.v[e1].x,b.v[e1].y,b.v[e2].x,b.v[e2].y,f.origin.x,f.origin.y,f.r1);
+        var p2 = GetCrossPoints_CircleLine(b.v[e1].x,b.v[e1].y,b.v[e2].x,b.v[e2].y,f.origin.x,f.origin.y,f.r2);
         
         if (p1[0] != null)points.add(p1[0]);
         if (p1[1] != null)points.add(p1[1]);
         if (p2[0] != null)points.add(p2[0]);
         if (p2[1] != null)points.add(p2[1]);
     }
-    var p1 = GetCrossPoints_CircleLine(b.v[3].x,b.v[3].y,b.v[0].x,b.v[0].y,f.origin.x,f.origin.y,f.r1);
-    var p2 = GetCrossPoints_CircleLine(b.v[3].x,b.v[3].y,b.v[0].x,b.v[0].y,f.origin.x,f.origin.y,f.r2);
-    
-    if (p1[0] != null)points.add(p1[0]);
-    if (p1[1] != null)points.add(p1[1]);
-    if (p2[0] != null)points.add(p2[0]);
-    if (p2[1] != null)points.add(p2[1]);
     
     //線分と線分の交差点算出
-    for (int i = 0; i < 3;i++) {
-        var p = GetCrossPoints_LineLine(b.v[i],b.v[i + 1],f.a,f.b);
-        var q = GetCrossPoints_LineLine(b.v[i],b.v[i + 1],f.ad,f.bd);
+    for (int i = 0; i < 4;i++) {
+        int e1,e2;
+        e1 = i;
+        if (i == 3) e2 = 0; 
+        else e2 = i + 1;
+        
+        var p = GetCrossPoints_LineLine(b.v[e1],b.v[e2],f.a,f.b);
+        var q = GetCrossPoints_LineLine(b.v[e1],b.v[e2],f.ad,f.bd);
         
         if (p!= null) points.add(p);
         if (q!= null) points.add(q);
     }
-    var p = GetCrossPoints_LineLine(b.v[3],b.v[0],f.a,f.b);
-    var q = GetCrossPoints_LineLine(b.v[3],b.v[0],f.ad,f.bd);
-    
-    if (p!= null) points.add(p);
-    if (q!= null) points.add(q);
     
     return points;
 }
@@ -173,7 +171,31 @@ ArrayList<PVector> GetCrossPoints_SectorCircle(Sector2D f, MyCircle c) {
     return points;
 }
 
-//扇形と点の内外判定
+//長方形同士の交差点算出
+ArrayList<PVector> GetCrossPoints_BoxBox(MyBox b1, MyBox b2) {
+    ArrayList<PVector> points = new ArrayList<PVector>();
+    
+    for (int i = 0;i < 4;i++) {
+        int e1,e2;
+        e1 = i;
+        if (i == 3) e2 = 0;
+        else e2 = i + 1;
+        
+        for (int j = 0;j < 4;j++) {
+            int e3,e4;
+            e3 = j;
+            if (j == 3) e4 = 0;
+            else e4 = j + 1;
+            
+            var p = GetCrossPoints_LineLine(b1.v[e1],b1.v[e2],b2.v[e3],b2.v[e4]);
+            if (p!= null) points.add(p);
+        }
+    }
+    
+    return points;
+}
+
+// 扇形と点の内外判定
 boolean CheckPointInSector(Sector2D f, PVector p) {
     //内円よりも外側にあるかどうか
     float length = PVector.sub(f.origin,p).mag();
@@ -194,7 +216,7 @@ boolean CheckPointInSector(Sector2D f, PVector p) {
     return true;
 }
 
-//長方形と点の内外判定
+// 長方形と点の内外判定
 boolean CheckPointInBox(MyBox b, PVector p) {
     for (int i = 0;i < 3;i++) {
         if (Cross(PVector.sub(b.v[i + 1],b.v[i]),PVector.sub(p,b.v[i])) < 0) return false;
@@ -225,4 +247,46 @@ PVector SectorPoint(Sector2D f, float s, float t) {
     PVector v = PVector.add(PVector.sub(f.a,f.origin),PVector.mult(PVector.sub(f.b,f.a),s));
     PVector p = PVector.add(RotateMatrix(t * (f.theta - f.alpha),v),f.origin);
     return p;
+}
+
+MyBox CreateAABB(PVector[] points) {
+    //最小、最大の座標を計算する
+    float mX,MX,mY,MY;
+    mX = 10000;
+    MX = -10000;
+    mY = 10000;
+    MY = -10000;
+    
+    for (PVector p : points) {
+        if (mX >= p.x) mX = p.x;
+        if (MX <= p.x) MX = p.x;
+        if (mY >= p.y) mY = p.y;
+        if (MY <= p.y) MY = p.y;
+    }
+    
+    return new MyBox(new PVector((MX + mX) / 2.0,(MY + mY) / 2.0),MX - mX,MY - mY,false,false,false);
+}
+
+void AdjustAABB(MyBox b, PVector[] points) {
+    //最小、最大の座標を計算する
+    float mX,MX,mY,MY;
+    mX = 10000;
+    MX = -10000;
+    mY = 10000;
+    MY = -10000;
+    
+    for (PVector p : points) {
+        if (mX >= p.x) mX = p.x;
+        if (MX <= p.x) MX = p.x;
+        if (mY >= p.y) mY = p.y;
+        if (MY <= p.y) MY = p.y;
+    }
+    
+    b.position = new PVector((MX + mX) / 2.0,(MY + mY) / 2.0);
+    b.w = MX - mX;
+    b.h = MY - mY;
+    b.v[0] = new PVector(b.position.x + b.w / 2, b.position.y + b.h / 2);
+    b.v[1] = new PVector(b.position.x - b.w / 2, b.position.y + b.h / 2);
+    b.v[2] = new PVector(b.position.x - b.w / 2, b.position.y - b.h / 2);
+    b.v[3] = new PVector(b.position.x + b.w / 2, b.position.y - b.h / 2);
 }

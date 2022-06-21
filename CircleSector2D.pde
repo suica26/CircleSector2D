@@ -15,19 +15,18 @@ void settings() {
 }
 
 void setup() {
-    var sector = new Sector2D(radians( -60),radians(60),new PVector(0,0),0,400,false,true);
     //オブジェクト宣言
     for (int i = 0;i < 0;i++) {
-        //var sector = new Sector2D(radians(random( -90,0)),radians(random(0,90)),new PVector(0,0),random(0,100),random(100,200),true, true);
+        //var sector = new Sector2D(radians(random( -90,0)),radians(random(0,90)),new PVector(0,0),random(0,100),random(100,200), true, true, true);
     }
     for (int y = 0;y <= ls;y++) {
         for (int x = 0;x <= ls;x++) {
-            var box = new MyBox(new PVector( -width / 2.0 + x * width / float(ls), -height / 2.0 + y * height / float(ls)),width / float(ls),height / float(ls),false, false);
+            var box = new MyBox(new PVector( -width / 2.0 + x * width / float(ls), -height / 2.0 + y * height / float(ls)),width / float(ls),height / float(ls),true,false, false);
         }
     }
     for (int y = 0;y < 0;y++) {
-        for (int x = 0;x <=  0;x++) {
-            var circle = new MyCircle(new PVector( -width / 2.0 + x * width / float(ls), -height / 2.0 + y * height / float(ls)),8,false);
+        for (int x = 0;x <= 0;x++) {
+            var circle = new MyCircle(new PVector( -width / 2.0 + x * width / float(ls), -height / 2.0 + y * height / float(ls)),8,true,false);
         }
     }
     /*
@@ -38,6 +37,15 @@ void setup() {
     var circle = newMyCircle(new PVector(0, 0),random(10,100),true);
 }
     */
+    willRotateBox = new MyBox(new PVector(300,150),500,25,false,false,false);
+    RotatedBox = new MyBox(new PVector(300, 150),500,25,false,false,false);
+    
+    for (int i = 0;i < 4;i++) {
+        AABBpoints[i] = willRotateBox.v[i];
+        AABBpoints[i + 4] = RotatedBox.v[i];
+    }
+    
+    AABB = CreateAABB(AABBpoints);
 }
 
 
@@ -45,13 +53,6 @@ void draw() {
     translate(width / 2,height / 2);   //描画座標軸の変更
     background(255);
     fill(255);
-    
-    // 図形描画
-    if (display) {
-        for (MyObject o : objects) {
-            o.DisplayShape();
-        }
-    }
     
     int vl = movingObjects.size();
     int rl = rotatingObjects.size();
@@ -67,6 +68,21 @@ void draw() {
         //図形の回転
         for (int j = 0;j < rl;j++) {
             rotatingObjects.get(j).Rotate(rotVec.get(j));
+        }
+        RotatedBox.RotateWithVec(radians( -1),new PVector(0,150));
+    }
+    
+    //AABBの更新
+    for (int i = 0;i < 4;i++) {
+        AABBpoints[i] = willRotateBox.v[i];
+        AABBpoints[i + 4] = RotatedBox.v[i];
+    }
+    AdjustAABB(AABB,AABBpoints);
+    
+    // 図形描画
+    if (display) {
+        for (MyObject o : objects) {
+            o.DisplayShape();
         }
     }
     
@@ -152,6 +168,18 @@ void draw() {
             checkPoints.add(c.position);
             if (CheckPointInSector(s,c.position)) judgeID = 6;
             judgeIDs.append(judgeID);
+        }
+    }
+    
+    for (MyBox b : boxes) {
+        var bbP = GetCrossPoints_BoxBox(AABB,b);
+        for (PVector p : bbP) {
+            checkPoints.add(p);
+            judgeIDs.append(1);
+        }
+        if (CheckPointInBox(AABB,b.position)) {
+            checkPoints.add(b.position);
+            judgeIDs.append(1);
         }
     }
     
