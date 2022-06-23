@@ -285,8 +285,17 @@ void AdjustAABB(MyBox b, PVector[] points) {
     b.position = new PVector((MX + mX) / 2.0,(MY + mY) / 2.0);
     b.w = MX - mX;
     b.h = MY - mY;
-    b.v[0] = new PVector(b.position.x + b.w / 2, b.position.y + b.h / 2);
-    b.v[1] = new PVector(b.position.x - b.w / 2, b.position.y + b.h / 2);
-    b.v[2] = new PVector(b.position.x - b.w / 2, b.position.y - b.h / 2);
-    b.v[3] = new PVector(b.position.x + b.w / 2, b.position.y - b.h / 2);
+    b.v[0].set(b.position.x + b.w / 2, b.position.y + b.h / 2);
+    b.v[1].set(b.position.x - b.w / 2, b.position.y + b.h / 2);
+    b.v[2].set(b.position.x - b.w / 2, b.position.y - b.h / 2);
+    b.v[3].set(b.position.x + b.w / 2, b.position.y - b.h / 2);
+}
+
+void AdjustSector(Sector2D s, float t) {
+    s.alpha = t;
+    s.a.set(s.r1 * cos(s.alpha) + s.origin.x, s.r1 * sin(s.alpha) + s.origin.y);
+    s.b.set(s.r2 * cos(s.alpha) + s.origin.x, s.r2 * sin(s.alpha) + s.origin.y);
+    s.ad.set(s.r1 * cos(s.theta) + s.origin.x, s.r1 * sin(s.theta) + s.origin.y);
+    s.bd.set(s.r2 * cos(s.theta) + s.origin.x, s.r2 * sin(s.theta) + s.origin.y);
+    s.position = PVector.mult(PVector.add(PVector.sub(s.a,s.origin),PVector.sub(s.ad,s.origin)).normalize(),(s.r2 + s.r1) / 2.0);
 }
