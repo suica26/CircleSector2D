@@ -29,3 +29,5 @@ MyBox willRotateBox;                                                //回転前�
 MyBox RotatedBox;                                                   //回転後長方形
 PVector[] AABBpoints = new PVector[8];                              //AABB計算用頂点
 MyBox AABB;                                                         //AABBボックス
+
+Sector2D sector;

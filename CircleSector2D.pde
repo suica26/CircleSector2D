@@ -15,6 +15,7 @@ void settings() {
 }
 
 void setup() {
+    sector = new Sector2D(radians( -90),radians(0),new PVector(0,0),100,400,true,false,false);
     //オブジェクト宣言
     for (int i = 0;i < 0;i++) {
         //var sector = new Sector2D(radians(random( -90,0)),radians(random(0,90)),new PVector(0,0),random(0,100),random(100,200), true, true, true);
@@ -37,15 +38,18 @@ void setup() {
     var circle = newMyCircle(new PVector(0, 0),random(10,100),true);
 }
     */
+    /*
     willRotateBox = new MyBox(new PVector(300,150),500,25,false,false,false);
     RotatedBox = new MyBox(new PVector(300, 150),500,25,false,false,false);
     
     for (int i = 0;i < 4;i++) {
-        AABBpoints[i] = willRotateBox.v[i];
-        AABBpoints[i + 4] = RotatedBox.v[i];
-    }
+    AABBpoints[i] = willRotateBox.v[i];
+    AABBpoints[i + 4] = RotatedBox.v[i];
+}
     
     AABB = CreateAABB(AABBpoints);
+    moveFlg = false;
+    */
 }
 
 
@@ -69,15 +73,17 @@ void draw() {
         for (int j = 0;j < rl;j++) {
             rotatingObjects.get(j).Rotate(rotVec.get(j));
         }
-        RotatedBox.RotateWithVec(radians( -1),new PVector(0,150));
+        //if (RotatedBox.angle > - 3.14)RotatedBox.RotateWithVec(radians( -1),new PVector(0,150));
     }
-    
+    /*
     //AABBの更新
     for (int i = 0;i < 4;i++) {
-        AABBpoints[i] = willRotateBox.v[i];
-        AABBpoints[i + 4] = RotatedBox.v[i];
-    }
+    AABBpoints[i] = willRotateBox.v[i];
+    AABBpoints[i + 4] = RotatedBox.v[i];
+}
     AdjustAABB(AABB,AABBpoints);
+    */
+    sector.RotateWithVec(radians( -1),new PVector(0,0));
     
     // 図形描画
     if (display) {
@@ -171,17 +177,19 @@ void draw() {
         }
     }
     
+    /*
     for (MyBox b : boxes) {
-        var bbP = GetCrossPoints_BoxBox(AABB,b);
-        for (PVector p : bbP) {
-            checkPoints.add(p);
-            judgeIDs.append(1);
-        }
-        if (CheckPointInBox(AABB,b.position)) {
-            checkPoints.add(b.position);
-            judgeIDs.append(1);
-        }
-    }
+    var bbP = GetCrossPoints_BoxBox(AABB,b);
+    for (PVector p : bbP) {
+    checkPoints.add(p);
+    judgeIDs.append(1);
+}
+    if (CheckPointInBox(AABB,b.position)) {
+    checkPoints.add(b.position);
+    judgeIDs.append(1);
+}
+}
+    */
     
     var finish = millis();
     
