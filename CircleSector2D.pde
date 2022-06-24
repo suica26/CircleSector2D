@@ -15,6 +15,9 @@ void settings() {
 }
 
 void setup() {
+    file = createWriter("data.csv");
+    file.println("Sector,SpeculativeCCD,RotateBox");
+    
     sector = new Sector2D(radians( -0),radians(0),new PVector(0,150),50,550,true,false,false);
     //オブジェクト宣言
     for (int i = 0;i < 0;i++) {
@@ -23,6 +26,7 @@ void setup() {
     for (int y = 0;y <= ls;y++) {
         for (int x = 0;x <= ls;x++) {
             var box = new MyBox(new PVector( -width / 2.0 + x * width / float(ls), -height / 2.0 + y * height / float(ls)),width / float(ls),height / float(ls),true,false, false);
+            RotateBoxHitCount.append(0);
         }
     }
     for (int y = 0;y < 0;y++) {
@@ -75,6 +79,9 @@ void draw() {
     int bSize = boxes.size();
     int cSize = circles.size();
     
+    int sectorHitNum = 0;
+    int AABBHitNum = 0;
+    
     //扇形と長方形の干渉判定
     for (int i = 0;i < sSize;i++) {
         for (int j = 0;j < bSize;j++) {
@@ -82,7 +89,8 @@ void draw() {
             var s = sectors.get(i);
             var b = boxes.get(j);
             if (CollisionDetection_SectorBox(s,b)) {
-                collisionPosition.add(b.position);
+                //collisionPosition.add(b.position);
+                sectorHitNum++;
             }
         }
     }
@@ -99,11 +107,21 @@ void draw() {
     //     }
 // }
     
-    //長方形同士の干渉判定
+    //長方形同士の干渉判定(AABB)
     for (MyBox b : boxes) {
         if (CollisionDetection_BoxBox(AABB,b)) {
             //collisionPosition.add(b.position);
+            AABBHitNum++;
         }
+    }
+    
+    //長方形同士の干渉判定(回転長方形)
+    for (int i = 0;i < bSize;i++) {
+        if (RotateBoxHitCount.get(i) == 0)
+            if (CollisionDetection_BoxBox(RotatedBox,boxes.get(i))) {
+                RotateBoxHitCount.set(i,1);
+                boxHitNum++;
+        }   
     }
     
     var finish = millis();
@@ -115,6 +133,9 @@ void draw() {
         println("finish:" + finish);
         println("progressTime:" + (finish - start));
         println("angle:" + RotatedBox.angle);
+        println("Sector:" + sectorHitNum);
+        println("AABB:" + AABBHitNum);
+        println("Rotate:" + boxHitNum);
     }
     //干渉オブジェクトの中心点を描画
     fill(0,255,0);
@@ -128,7 +149,14 @@ void draw() {
         }
     }
     
+    if (moveFlg && exportCSVStatus == -1) {
+        file.println(sectorHitNum + "," + AABBHitNum + "," + boxHitNum);
+    }
+    
     if (exportCSVStatus == 0) {
         exportCSVStatus = 1;
+        file.flush();
+        file.close();
+        exit();
     }
 }

@@ -30,8 +30,8 @@ PVector[] AABBpoints = new PVector[8];                              //AABB計算
 MyBox AABB;                                                         //AABBボックス
 Sector2D sector;                                                    //回転体に対する扇形
 
-IntList SectorHitCount = new IntList();                             //扇形のヒット数リスト
-IntList SpeculativeHitCount = new IntList();                        //投機的CCDのヒット数リスト
 IntList RotateBoxHitCount = new IntList();                          //回転長方形のヒット数リスト
+int boxHitNum = 0;                                                  //回転長方形の総ヒット数
 
 int exportCSVStatus = -1;                                           //CSVファイル出力用のステータス変数
+PrintWriter file;                                                   //CSVファイル
