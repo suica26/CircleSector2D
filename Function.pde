@@ -197,18 +197,19 @@ ArrayList<PVector> GetCrossPoints_BoxBox(MyBox b1, MyBox b2) {
 
 // 扇形と点の内外判定
 boolean CheckPointInSector(Sector2D f, PVector p) {
+    float distance = PVector.sub(f.origin,p).mag();
     //内円よりも外側にあるかどうか
-    float length = PVector.sub(f.origin,p).mag();
-    if (length < f.r1 - epsilon) return false;
+    if (distance < f.r1 - epsilon) return false;
     //外円よりも内側にあるかどうか
-    if (length > f.r2 + epsilon) return false;
+    if (distance > f.r2 + epsilon) return false;
     //回転方向で場合分け
+    
     //正の回転の場合
     if (f.theta - f.alpha >= 0) {
         if (Cross(PVector.sub(p,f.a),PVector.sub(f.b,f.a)) >= epsilon) return false;
         if (Cross(PVector.sub(p,f.ad),PVector.sub(f.bd,f.ad)) <- epsilon) return false;
     }
-    else{
+    else{   //負の回転の場合
         if (Cross(PVector.sub(p,f.a),PVector.sub(f.b,f.a)) <- epsilon) return false;
         if (Cross(PVector.sub(p,f.ad),PVector.sub(f.bd,f.ad)) >= epsilon) return false;
     }
@@ -298,4 +299,72 @@ void AdjustSector(Sector2D s, float t) {
     s.ad.set(s.r1 * cos(s.theta) + s.origin.x, s.r1 * sin(s.theta) + s.origin.y);
     s.bd.set(s.r2 * cos(s.theta) + s.origin.x, s.r2 * sin(s.theta) + s.origin.y);
     s.position = PVector.mult(PVector.add(PVector.sub(s.a,s.origin),PVector.sub(s.ad,s.origin)).normalize(),(s.r2 + s.r1) / 2.0);
+}
+
+/////////////////////////////////////////////////////////////////
+/*
+draw内関数
+*/
+
+void movement() {
+    int vl = movingObjects.size();
+    int rl = rotatingObjects.size();
+    
+    //図形の平行移動
+    for (int i = 0;i < vl;i++) {
+        var movePos = PVector.add(movingObjects.get(i).position,moveVec.get(i));
+        movingObjects.get(i).SetPos(movePos);
+        if (movePos.x < - width / 2.0 || movePos.x > width / 2.0) moveVec.get(i).x *= -1;
+        if (movePos.y < - height / 2.0 || movePos.y > height / 2.0) moveVec.get(i).y *= -1;
+    }
+    //図形の回転
+    for (int j = 0;j < rl;j++) {
+        rotatingObjects.get(j).Rotate(rotVec.get(j));
+    }
+}
+
+boolean CollisionDetection_SectorBox(Sector2D s, MyBox b) {
+    //扇形と長方形が交差しているかのチェック
+    var sbP = GetCrossPoints_SectorBox(s,b);
+    for (PVector p : sbP) {
+        // 扇形内外判定
+        if (CheckPointInSector(s,p)) return true;
+    }
+    
+    // 長方形に扇形が覆われているかのチェック
+    if (CheckPointInBox(b,s.position)) return true;
+    
+    // 扇形に長方形が覆われているかのチェック
+    if (CheckPointInSector(s,b.position)) return true;
+    
+    return false;
+}
+
+boolean CollisionDetection_SectorCircle(Sector2D s, MyCircle c) {
+    //扇形と円が交差しているかのチェック
+    var scP = GetCrossPoints_SectorCircle(s,c);
+    for (PVector p : scP) {
+        //扇形内外判定
+        if (CheckPointInSector(s,p)) return true;
+    }
+    
+    //円に扇形が覆われているかのチェック
+    if (CheckPointInCircle(c,s.position)) return true;
+    
+    //扇形に円が覆われているかのチェック
+    if (CheckPointInSector(s,c.position)) return true;
+    
+    return false;
+}
+
+boolean CollisionDetection_BoxBox(MyBox b1, MyBox b2) {
+    var bbP = GetCrossPoints_BoxBox(b1,b2);
+    
+    for (PVector p : bbP) {
+        if (p!= null) return true;
+    }
+    
+    if (CheckPointInBox(b1,b2.position)) return true;
+    
+    return false;
 }

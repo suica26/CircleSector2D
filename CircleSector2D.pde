@@ -49,57 +49,26 @@ void draw() {
     background(255);
     fill(255);
     
-    int vl = movingObjects.size();
-    int rl = rotatingObjects.size();
     // 図形の運動
     if (moveFlg) {
-        //図形の平行移動
-        for (int i = 0;i < vl;i++) {
-            var movePos = PVector.add(movingObjects.get(i).position,moveVec.get(i));
-            movingObjects.get(i).SetPos(movePos);
-            if (movePos.x < - width / 2.0 || movePos.x > width / 2.0) moveVec.get(i).x *= -1;
-            if (movePos.y < - height / 2.0 || movePos.y > height / 2.0) moveVec.get(i).y *= -1;
+        //movement();
+        RotatedBox.RotateWithVec(radians( -1),new PVector(0,150));
+        AdjustSector(sector, RotatedBox.angle);
+        //AABBの更新
+        for (int i = 0;i < 4;i++) {
+            AABBpoints[i] = willRotateBox.v[i];
+            AABBpoints[i + 4] = RotatedBox.v[i];
         }
-        //図形の回転
-        for (int j = 0;j < rl;j++) {
-            rotatingObjects.get(j).Rotate(rotVec.get(j));
-        }
-        if (RotatedBox.angle > - 3.14) {
-            RotatedBox.RotateWithVec(radians( -1),new PVector(0,150));
-            AdjustSector(sector, RotatedBox.angle);
-        }
-    }
-    //AABBの更新
-    for (int i = 0;i < 4;i++) {
-        AABBpoints[i] = willRotateBox.v[i];
-        AABBpoints[i + 4] = RotatedBox.v[i];
-    }
-    AdjustAABB(AABB,AABBpoints);
-    
-    // 図形描画
-    if (display) {
-        for (MyObject o : objects) {
-            o.DisplayShape();
+        AdjustAABB(AABB,AABBpoints);
+        
+        if (RotatedBox.angle <= -3.14) {
+            moveFlg = false;
+            if (exportCSVStatus == -1) exportCSVStatus = 0;
         }
     }
     
+    ArrayList<PVector> collisionPosition = new ArrayList<PVector>();
     var start = millis();
-    
-    //扇形との干渉判定点
-    ArrayList<PVector> checkPoints = new ArrayList<PVector>();
-    //扇形との干渉内容のリスト
-    IntList judgeIDs = new IntList();
-    //judgeIDsに格納するための判定ID
-    /*
-    0 : 干渉していない
-    1 : 長方形と扇形が交差
-    2 : 長方形に扇形の中心点が入っている
-    3 : 扇形に長方形の中心点が入っている
-    4 : 円と扇形が交差
-    5 : 円に扇形の中心点が入っている
-    6 : 扇形に円の中心点が入っている
-    */
-    int judgeID = 0;
     
     //毎回ArratListのメンバ関数にアクセスする必要はないので、変数格納
     int sSize = sectors.size();
@@ -112,71 +81,28 @@ void draw() {
             //配列の長さ取得と同様の理由
             var s = sectors.get(i);
             var b = boxes.get(j);
-            
-            //扇形と長方形が交差しているかのチェック
-            var sbP = GetCrossPoints_SectorBox(s,b);
-            for (PVector p : sbP) {
-                judgeID = 0;//初期値化
-                checkPoints.add(p);
-                // 扇形内外判定
-                if (CheckPointInSector(s,p))judgeID = 1;
-                judgeIDs.append(judgeID);
+            if (CollisionDetection_SectorBox(s,b)) {
+                collisionPosition.add(b.position);
             }
-            
-            // 長方形に扇形が覆われているかのチェック
-            judgeID = 0;//初期値化
-            checkPoints.add(s.position);
-            if (CheckPointInBox(b,s.position)) judgeID = 2;
-            judgeIDs.append(judgeID);
-            
-            // 扇形に長方形が覆われているかのチェック
-            judgeID = 0;//初期値化
-            checkPoints.add(b.position);
-            if (CheckPointInSector(s,b.position)) judgeID = 3;
-            judgeIDs.append(judgeID);
         }
     }
     
     // 扇形と円の干渉判定
-    for (int i = 0;i < sSize;i++) {
-        for (int j = 0;j < cSize;j++) {
-            //配列の長さ取得と同様の理由
-            var s = sectors.get(i);
-            var c = circles.get(j);
-            
-            //扇形と円が交差しているかのチェック
-            var scP = GetCrossPoints_SectorCircle(s,c);
-            for (PVector p : scP) {
-                judgeID = 0;    //初期値化
-                checkPoints.add(p);
-                //扇形内外判定
-                if (CheckPointInSector(s,p)) judgeID = 4;
-                judgeIDs.append(judgeID);
-            }
-            
-            //円に扇形が覆われているかのチェック
-            judgeID = 0;    //初期値化
-            checkPoints.add(s.position);
-            if (CheckPointInCircle(c,s.position)) judgeID = 5;
-            judgeIDs.append(judgeID);
-            
-            //扇形に円が覆われているかのチェック
-            judgeID = 0;    //初期値化
-            checkPoints.add(c.position);
-            if (CheckPointInSector(s,c.position)) judgeID = 6;
-            judgeIDs.append(judgeID);
-        }
-    }
+    // for (int i = 0;i < sSize;i++) {
+    //     for (int j = 0;j < cSize;j++) {
+    //         //配列の長さ取得と同様の理由
+    //         var s = sectors.get(i);
+    //         var c = circles.get(j);
+    //         if (CollisionDetection_SectorCircle(s,c)) {
+    //             collisionPosition.add(c.position);
+    //         }
+    //     }
+// }
     
+    //長方形同士の干渉判定
     for (MyBox b : boxes) {
-        var bbP = GetCrossPoints_BoxBox(AABB,b);
-        for (PVector p : bbP) {
-            checkPoints.add(p);
-            judgeIDs.append(1);
-        }
-        if (CheckPointInBox(AABB,b.position)) {
-            checkPoints.add(b.position);
-            judgeIDs.append(1);
+        if (CollisionDetection_BoxBox(AABB,b)) {
+            //collisionPosition.add(b.position);
         }
     }
     
@@ -190,23 +116,19 @@ void draw() {
         println("progressTime:" + (finish - start));
         println("angle:" + RotatedBox.angle);
     }
-    
-    //干渉点の描画
+    //干渉オブジェクトの中心点を描画
+    fill(0,255,0);
+    for (PVector p : collisionPosition) {
+        ellipse(p.x, p.y, 5, 5);
+    }
+    // 図形描画
     if (display) {
-        int pSize = checkPoints.size();
-        for (int i = 0;i < pSize;i++) {
-            int jID = judgeIDs.get(i);
-            if (jID == 0) continue;
-            switch(jID) {
-                case 1 : fill(0,255,0); break;
-                case 2 : fill(127,255,0); break;
-                case 3 : fill(255,127,0); break;
-                case 4 : fill(0,0,255); break;
-                case 5 : fill(127,0,255); break;
-                case 6 : fill(255,0,127); break;
-            }
-            var p = checkPoints.get(i);
-            ellipse(p.x,p.y,8,8);
+        for (MyObject o : objects) {
+            o.DisplayShape();
         }
+    }
+    
+    if (exportCSVStatus == 0) {
+        exportCSVStatus = 1;
     }
 }
