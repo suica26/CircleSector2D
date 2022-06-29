@@ -206,12 +206,12 @@ boolean CheckPointInSector(Sector2D f, PVector p) {
     
     //正の回転の場合
     if (f.theta - f.alpha >= 0) {
-        if (Cross(PVector.sub(p,f.a),PVector.sub(f.b,f.a)) >= epsilon) return false;
-        if (Cross(PVector.sub(p,f.ad),PVector.sub(f.bd,f.ad)) <- epsilon) return false;
+        if (Cross(PVector.sub(p,f.origin),PVector.sub(f.a,f.origin)) >= epsilon) return false;
+        if (Cross(PVector.sub(p,f.origin),PVector.sub(f.ad,f.origin)) <= -epsilon) return false;
     }
     else{   //負の回転の場合
-        if (Cross(PVector.sub(p,f.a),PVector.sub(f.b,f.a)) <- epsilon) return false;
-        if (Cross(PVector.sub(p,f.ad),PVector.sub(f.bd,f.ad)) >= epsilon) return false;
+        if (Cross(PVector.sub(p,f.origin),PVector.sub(f.a,f.origin)) <= -epsilon) return false;
+        if (Cross(PVector.sub(p,f.origin),PVector.sub(f.ad,f.origin)) >= epsilon) return false;
     }
     
     return true;

@@ -16,7 +16,7 @@ void settings() {
 
 void setup() {
     file = createWriter("data.csv");
-    file.println("Sector,SpeculativeCCD,RotateBox");
+    file.println("--sum--,Sector,SpeculativeCCD,RotateBox,--sameHit--,Sector,SpeculativeCCD,--extra--,Sector,SpeculativeCCD,--lack--,Sector,SpeculativeCCD,--miss--,Sector,SpeculativeCCD");
     
     sector = new Sector2D(radians( -0),radians(0),new PVector(0,150),50,550,true,false,false);
     //オブジェクト宣言
@@ -82,18 +82,68 @@ void draw() {
     int sectorHitNum = 0;
     int AABBHitNum = 0;
     
-    //扇形と長方形の干渉判定
-    for (int i = 0;i < sSize;i++) {
-        for (int j = 0;j < bSize;j++) {
-            //配列の長さ取得と同様の理由
-            var s = sectors.get(i);
-            var b = boxes.get(j);
-            if (CollisionDetection_SectorBox(s,b)) {
-                //collisionPosition.add(b.position);
-                sectorHitNum++;
+    int[] sameHit = new int[2];
+    int[] extra = new int[2];
+    int[] lack = new int[2];
+    int[] miss = new int[2];
+    float[] accuracy = new float[2];
+    
+    for (int i = 0;i < 2;i++) {
+        sameHit[i] = 0;
+        extra[i] = 0;
+        lack[i] = 0;
+        miss[i] = 0;
+        accuracy[i] = 0.0;
+    }
+    
+    int secAcc = 0;
+    int speAcc = 0;
+    
+    for (int i = 0;i < bSize;i++) {
+        var box = boxes.get(i);
+        
+        boolean a,b,c;
+        a = b = c = false;
+        
+        if (CollisionDetection_SectorBox(sector,box)) { 
+            a = true;
+            sectorHitNum++;
+        }
+        if (CollisionDetection_BoxBox(AABB,box)) { 
+            b = true;
+            AABBHitNum++;
+        }
+        if (RotateBoxHitCount.get(i) == 0) {   
+            if (CollisionDetection_BoxBox(RotatedBox,box)) {
+                RotateBoxHitCount.set(i,1);
+                boxHitNum++;
             }
         }
+        if (RotateBoxHitCount.get(i) == 1) c = true;
+        
+        //sameHit
+        if (a && c) sameHit[0]++;
+        if (b && c) sameHit[1]++;
+        //extra
+        if (a && !c) extra[0]++;
+        if (b && !c) extra[1]++;
+        //lack
+        if (!a && c) lack[0]++;
+        if (!b && c) lack[1]++;
     }
+    
+    //扇形と長方形の干渉判定
+    // for (int i = 0;i < sSize;i++) {
+    //     for (int j = 0;j < bSize;j++) {
+    //         //配列の長さ取得と同様の理由
+    //         var s = sectors.get(i);
+    //         var b = boxes.get(j);
+    //         if (CollisionDetection_SectorBox(s,b)) {
+    //             // collisionPosition.add(b.position);
+    //             sectorHitNum++;
+    //         }
+    //     }
+// }
     
     // 扇形と円の干渉判定
     // for (int i = 0;i < sSize;i++) {
@@ -108,21 +158,21 @@ void draw() {
 // }
     
     //長方形同士の干渉判定(AABB)
-    for (MyBox b : boxes) {
-        if (CollisionDetection_BoxBox(AABB,b)) {
-            //collisionPosition.add(b.position);
-            AABBHitNum++;
-        }
-    }
+    // for (MyBox b : boxes) {
+    //     if (CollisionDetection_BoxBox(AABB,b)) {
+    //         //collisionPosition.add(b.position);
+    //         AABBHitNum++;
+    //     }
+// }
     
     //長方形同士の干渉判定(回転長方形)
-    for (int i = 0;i < bSize;i++) {
-        if (RotateBoxHitCount.get(i) == 0)
-            if (CollisionDetection_BoxBox(RotatedBox,boxes.get(i))) {
-                RotateBoxHitCount.set(i,1);
-                boxHitNum++;
-        }   
-    }
+    // for (int i = 0;i < bSize;i++) {
+    //     if (RotateBoxHitCount.get(i) == 0)
+    //         if (CollisionDetection_BoxBox(RotatedBox,boxes.get(i))) {
+    //             RotateBoxHitCount.set(i,1);
+    //             boxHitNum++;
+    //     }   
+// }
     
     var finish = millis();
     
@@ -149,12 +199,34 @@ void draw() {
         }
     }
     
+    for (int i = 0;i < 2;i++) miss[i] = extra[i] + lack[i];
+    
     if (moveFlg && exportCSVStatus == -1) {
-        file.println(sectorHitNum + "," + AABBHitNum + "," + boxHitNum);
+        file.print("," + sectorHitNum + "," + AABBHitNum + "," + boxHitNum + ",");
+        file.print(",");
+        for (int i : sameHit)file.print(i + ",");
+        file.print(",");
+        for (int i : extra)file.print(i + ",");
+        file.print(",");
+        for (int i : lack)file.print(i + ",");
+        file.print(",");
+        for (int i : miss)file.print(i + ",");
+        file.println("");
     }
     
     if (exportCSVStatus == 0) {
         exportCSVStatus = 1;
+        
+        file.print("," + sectorHitNum + "," + AABBHitNum + "," + boxHitNum + ",");
+        file.print(",");
+        for (int i : sameHit)file.print(i + ",");
+        file.print(",");
+        for (int i : extra)file.print(i + ",");
+        file.print(",");
+        for (int i : lack)file.print(i + ",");
+        file.print(",");
+        for (int i : miss)file.print(i + ",");
+        
         file.flush();
         file.close();
         exit();
