@@ -11,22 +11,7 @@
 */
 
 void keyPressed() {
-    if (keyCode == ' ') moveFlg = !moveFlg;
     if (key == 'd') display = !display;
-}
-
-void RegistObjList(MyObject o, boolean isMoving, boolean isRotating) {
-    objects.add(o);
-    if (isMoving) {
-        movingObjects.add(o);
-        var v = new PVector(random( -1,1),random( -1,1));
-        moveVec.add(PVector.mult(v.normalize(),velocity));
-    }
-    if (isRotating) {
-        rotatingObjects.add(o);
-        float rv = radians(random( -5,5));
-        rotVec.append(rv);
-    }
 }
 
 // 外積関数
@@ -236,8 +221,7 @@ boolean CheckPointInCircle(MyCircle c, PVector p) {
 PVector RotateMatrix(float theta, PVector v) {
     float x = v.x * cos(theta) - v.y * sin(theta);
     float y = v.x * sin(theta) + v.y * cos(theta);
-    PVector r = new PVector(x,y);
-    return r;
+    return new PVector(x,y);
 }
 
 // 扇形関数 P(s,t) = R(tθ)L(s) + O
@@ -265,7 +249,7 @@ MyBox CreateAABB(PVector[] points) {
         if (MY <= p.y) MY = p.y;
     }
     
-    return new MyBox(new PVector((MX + mX) / 2.0,(MY + mY) / 2.0),MX - mX,MY - mY,false,false,false);
+    return new MyBox(new PVector((MX + mX) / 2.0,(MY + mY) / 2.0),MX - mX,MY - mY);
 }
 
 void AdjustAABB(MyBox b, PVector[] points) {
@@ -306,21 +290,14 @@ void AdjustSector(Sector2D s, float t) {
 draw内関数
 */
 
-void movement() {
-    int vl = movingObjects.size();
-    int rl = rotatingObjects.size();
-    
-    //図形の平行移動
-    for (int i = 0;i < vl;i++) {
-        var movePos = PVector.add(movingObjects.get(i).position,moveVec.get(i));
-        movingObjects.get(i).SetPos(movePos);
-        if (movePos.x < - width / 2.0 || movePos.x > width / 2.0) moveVec.get(i).x *= -1;
-        if (movePos.y < - height / 2.0 || movePos.y > height / 2.0) moveVec.get(i).y *= -1;
-    }
-    //図形の回転
-    for (int j = 0;j < rl;j++) {
-        rotatingObjects.get(j).Rotate(rotVec.get(j));
-    }
+void SetFillColor(float gray) {
+    currentFillColor.set(gray, gray, gray);
+    fill(gray);
+}
+
+void SetFillColor(float v1, float v2, float v3) {
+    currentFillColor.set(v1, v2, v3);
+    fill(v1, v2 ,v3);
 }
 
 boolean CollisionDetection_SectorBox(Sector2D s, MyBox b) {
