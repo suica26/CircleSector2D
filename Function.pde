@@ -36,9 +36,9 @@ void keyPressed() {
             case 3 :
                 if (--ccdID < 0) ccdID = 0;
                 switch(ccdID) {
-                    case 0 : text_CCD = "none"; break;	
+                    case 0 : text_CCD = "なし"; break;	
                 case 1 : text_CCD = "S-CCD"; break;
-                case 2 : text_CCD = "Sector"; break;
+                case 2 : text_CCD = "扇形"; break;
             }
             break;
         }
@@ -63,9 +63,9 @@ void keyPressed() {
             case 3 :
                 if (++ccdID > 2) ccdID = 2;
                 switch(ccdID) {
-                    case 0 : text_CCD = "none"; break;	
+                    case 0 : text_CCD = "なし"; break;	
                 case 1 : text_CCD = "S-CCD"; break;
-                case 2 : text_CCD = "Sector"; break;
+                case 2 : text_CCD = "扇形"; break;
             }
             break;
         }
@@ -78,11 +78,13 @@ void keyPressed() {
 }
 
 void keyTyped() {
-    if (key == '1') paramChangeValue = 5;
-}
-
-void keyReleased() {
+    if (key == 'p') moveFlg = !moveFlg;
+    if (key == 'd') ccdDispFlg = !ccdDispFlg;
+    
     if (key == '1') paramChangeValue = 1;
+    if (key == '2') paramChangeValue = 10;
+    if (key == '3') paramChangeValue = 100;
+    if (key == '4') paramChangeValue = 1000;
 }
 
 // 外積関数
@@ -338,17 +340,31 @@ void AdjustAABB(MyBox b, PVector[] points) {
         if (MY <= p.y) MY = p.y;
     }
     
-    b.position = new PVector((MX + mX) / 2.0,(MY + mY) / 2.0);
+    b.position.set((MX + mX) / 2,(MY + mY) / 2);
     b.w = MX - mX;
     b.h = MY - mY;
     b.v[0].set(b.position.x + b.w / 2, b.position.y + b.h / 2);
     b.v[1].set(b.position.x - b.w / 2, b.position.y + b.h / 2);
     b.v[2].set(b.position.x - b.w / 2, b.position.y - b.h / 2);
     b.v[3].set(b.position.x + b.w / 2, b.position.y - b.h / 2);
+    b.angle = 0;
 }
 
 void AdjustSector(Sector2D s, float t) {
     s.alpha = t;
+    s.a.set(s.r1 * cos(s.alpha) + s.origin.x, s.r1 * sin(s.alpha) + s.origin.y);
+    s.b.set(s.r2 * cos(s.alpha) + s.origin.x, s.r2 * sin(s.alpha) + s.origin.y);
+    s.ad.set(s.r1 * cos(s.theta) + s.origin.x, s.r1 * sin(s.theta) + s.origin.y);
+    s.bd.set(s.r2 * cos(s.theta) + s.origin.x, s.r2 * sin(s.theta) + s.origin.y);
+    s.position = PVector.mult(PVector.add(PVector.sub(s.a,s.origin),PVector.sub(s.ad,s.origin)).normalize(),(s.r2 + s.r1) / 2.0);
+}
+
+void AdjustSector(Sector2D s, float alpha, float theta, float r1, float r2) {
+    s.alpha = alpha;
+    s.theta = theta;
+    s.r1 = r1;
+    s.r2 = r2;
+    
     s.a.set(s.r1 * cos(s.alpha) + s.origin.x, s.r1 * sin(s.alpha) + s.origin.y);
     s.b.set(s.r2 * cos(s.alpha) + s.origin.x, s.r2 * sin(s.alpha) + s.origin.y);
     s.ad.set(s.r1 * cos(s.theta) + s.origin.x, s.r1 * sin(s.theta) + s.origin.y);
@@ -418,11 +434,11 @@ boolean CollisionDetection_BoxBox(MyBox b1, MyBox b2) {
 }
 
 boolean CollisionDetection_BoxCircle(MyBox b, MyCircle c) {
-    var vBox = new MyBox(b.position, b.w + c.r * 2, b.h, 0);
+    var vBox = new MyBox(new PVector(b.position.x, b.position.y), b.w + c.r * 2, b.h, 0);
     vBox.Rotate(b.angle, vBox.position);
     if (CheckPointInBox(vBox, c.position)) return true;
     
-    var hBox = new MyBox(b.position, b.w, b.h + c.r * 2, 0);
+    var hBox = new MyBox(new PVector(b.position.x, b.position.y), b.w, b.h + c.r * 2, 0);
     hBox.Rotate(b.angle, hBox.position);
     if (CheckPointInBox(hBox, c.position)) return true;
     

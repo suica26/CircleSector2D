@@ -18,8 +18,9 @@ PVector currentFillColor = new PVector();                           //直近のf
 float epsilon = 0.01;                                               //計算誤差補正値
 float s,t;                                                          //扇形のパラメトリック表現用の変数
 boolean display = true;                                             //描画切り替えフラグ
-PVector[] AABBpoints = new PVector[8];                              //AABB計算用頂点
+PVector[] boundingPoints = new PVector[8];                          //BV計算用頂点
 MyBox AABB;                                                         //AABBボックス
+Sector2D sector;
 
 PVector mousePos = new PVector();
 
@@ -42,11 +43,14 @@ int paramChangeValue = 1;
 int timer = 0;
 
 int targetFPS = 60;
-float bulletSpeed = 3000;
-float rotSpeed = 900;
+float bulletSpeed = 1000;
+float rotSpeed = 300;
 int ccdID;
 
 int text_FPS;
 int text_bulletSpeed;
 int text_rotSpeed;
-String text_CCD = "none";
+String text_CCD = "なし";
+
+boolean moveFlg = true;
+boolean ccdDispFlg = false;

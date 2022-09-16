@@ -21,7 +21,9 @@ class MyObject {
     //図形描画関数
     void DisplayShape() {}
     void DisplayShape(float gray) {}
+    void DisplayShape(float gray, float alpha) {}
     void DisplayShape(float v1, float v2, float v3) {}
+    void DisplayShape(float v1, float v2, float v3, float alpha) {}
     //中心設定関数
     void SetPos(PVector pos) {}
     //回転角(ラジアン)と回転中心を入力することで回転
@@ -108,10 +110,34 @@ class Sector2D extends MyObject{
         line(ad.x, ad.y, bd.x, bd.y); //回転後の線分
     }
     
+    void DisplayShape(float gray, float alpha) {
+        fill(gray, alpha);
+        float al = this.alpha + angle;
+        float th = this.theta + angle;
+        
+        arc(origin.x, origin.y, r2 * 2, r2 * 2, al, th);
+        fill(255);  //小円部分は白で塗りつぶす
+        arc(origin.x, origin.y, r1 * 2, r1 * 2, al, th);
+        line(a.x, a.y, b.x, b.y); //回転前の線分
+        line(ad.x, ad.y, bd.x, bd.y); //回転後の線分
+    }
+    
     void DisplayShape(float v1, float v2, float v3) {
         fill(v1, v2 ,v3);
         float al = alpha + angle;
         float th = theta + angle;
+        
+        arc(origin.x, origin.y, r2 * 2, r2 * 2, al, th);
+        fill(255);  //小円部分は白で塗りつぶす
+        arc(origin.x, origin.y, r1 * 2, r1 * 2, al, th);
+        line(a.x, a.y, b.x, b.y); //回転前の線分
+        line(ad.x, ad.y, bd.x, bd.y); //回転後の線分
+    }
+    
+    void DisplayShape(float v1, float v2, float v3, float alpha) {
+        fill(v1, v2 ,v3, alpha);
+        float al = this.alpha + angle;
+        float th = this.theta + angle;
         
         arc(origin.x, origin.y, r2 * 2, r2 * 2, al, th);
         fill(255);  //小円部分は白で塗りつぶす
@@ -132,7 +158,8 @@ class Sector2D extends MyObject{
     
     void Rotate(float t, PVector o) {
         //回転中心を原点に移動
-        SetPos(PVector.sub(position,o));
+        var moveVec = new PVector(o.x, o.y);
+        SetPos(PVector.sub(position,moveVec));
         
         //回転
         a = RotateMatrix(t,a);
@@ -144,7 +171,7 @@ class Sector2D extends MyObject{
         angle += t;
         
         //回転中心をもとの座標に戻す
-        SetPos(PVector.add(position, o));
+        SetPos(PVector.add(position, moveVec));
     }
 }
 
@@ -206,8 +233,18 @@ class MyBox extends MyObject{
         BoxShape();
     }
     
+    void DisplayShape(float gray, float alpha) {
+        fill(gray, alpha);
+        BoxShape();
+    }
+    
     void DisplayShape(float v1, float v2, float v3) {
         fill(v1, v2, v3);
+        BoxShape();
+    }
+    
+    void DisplayShape(float v1, float v2, float v3, float alpha) {
+        fill(v1, v2, v3, alpha);
         BoxShape();
     }
     
@@ -219,15 +256,20 @@ class MyBox extends MyObject{
     
     void Rotate(float t, PVector o) {
         //回転中心を原点に移動
-        SetPos(PVector.sub(position, o));
+        var moveVec = new PVector(o.x, o.y);    //oをそのまま利用すると、o = positionの時にpositionが0ベクトルになり、元の座標に戻せなくなる
+        SetPos(PVector.sub(position, moveVec));
         
         //回転
-        position = RotateMatrix(t, position);
-        for (int i = 0;i < 4;i++) v[i] = RotateMatrix(t,v[i]);
+        var rotPos = RotateMatrix(t, position);
+        position.set(rotPos.x, rotPos.y);
+        for (int i = 0;i < 4;i++) {
+            var rotV = RotateMatrix(t,v[i]);
+            v[i].set(rotV.x, rotV.y);
+        }
         angle += t;
         
         //回転中心をもとの座標に戻す
-        SetPos(PVector.add(position, o));
+        SetPos(PVector.add(position, moveVec));
     }
 }
 
@@ -267,8 +309,13 @@ class MyCircle extends MyObject{
         ellipse(position.x, position.y, r * 2, r * 2);
     }
     
-    void DisplayShape(float v1, float v2, float v3) {
-        fill(v1, v2, v3);
+    void DisplayShape(float gray, float alpha) {
+        fill(gray, alpha);
+        ellipse(position.x, position.y, r * 2, r * 2);
+    }
+    
+    void DisplayShape(float v1, float v2, float v3, float alpha) {
+        fill(v1, v2, v3, alpha);
         ellipse(position.x, position.y, r * 2, r * 2);
     }
     
@@ -278,14 +325,15 @@ class MyCircle extends MyObject{
     
     void Rotate(float t, PVector o) {
         //回転中心を原点に移動
-        SetPos(PVector.sub(position, o));
+        var moveVec = new PVector(o.x, o.y);
+        SetPos(PVector.sub(position, moveVec));
         
         //回転
         position = RotateMatrix(t, position);
         angle += t;
         
         //回転中心をもとの座標に戻す
-        SetPos(PVector.add(position, o));
+        SetPos(PVector.add(position, moveVec));
     }
 }
 
