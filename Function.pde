@@ -9,9 +9,16 @@
 
 
 */
+void keyTyped() {
+    if (key == ' ') {
+        bullet.SetPos(gun_front.position);
+        bulletMoveVec.set(gunDir.x, gunDir.y);
+        bulletMoveVec = PVector.mult(bulletMoveVec.normalize(),75);
+    }
+}
 
-void keyPressed() {
-    if (key == 'd') display = !display;
+void mouseButton() {
+    
 }
 
 // 外積関数
@@ -249,7 +256,7 @@ MyBox CreateAABB(PVector[] points) {
         if (MY <= p.y) MY = p.y;
     }
     
-    return new MyBox(new PVector((MX + mX) / 2.0,(MY + mY) / 2.0),MX - mX,MY - mY);
+    return new MyBox(new PVector((MX + mX) / 2.0,(MY + mY) / 2.0),MX - mX,MY - mY, 3);
 }
 
 void AdjustAABB(MyBox b, PVector[] points) {
@@ -342,6 +349,22 @@ boolean CollisionDetection_BoxBox(MyBox b1, MyBox b2) {
     }
     
     if (CheckPointInBox(b1,b2.position)) return true;
+    
+    return false;
+}
+
+boolean CollisionDetection_BoxCircle(MyBox b, MyCircle c) {
+    var vBox = new MyBox(b.position, b.w + c.r * 2, b.h, 0);
+    vBox.Rotate(b.angle, vBox.position);
+    if (CheckPointInBox(vBox, c.position)) return true;
+    
+    var hBox = new MyBox(b.position, b.w, b.h + c.r * 2, 0);
+    hBox.Rotate(b.angle, hBox.position);
+    if (CheckPointInBox(hBox, c.position)) return true;
+    
+    for (PVector v : b.v) {
+        if (CheckPointInCircle(c, v)) return true;
+    }
     
     return false;
 }

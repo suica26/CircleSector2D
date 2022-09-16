@@ -20,10 +20,14 @@ class MyObject {
     public MyObject() {}
     //図形描画関数
     void DisplayShape() {}
+    void DisplayShape(float gray) {}
+    void DisplayShape(float v1, float v2, float v3) {}
     //中心設定関数
     void SetPos(PVector pos) {}
     //回転角(ラジアン)と回転中心を入力することで回転
     void Rotate(float t, PVector o) {}
+    //draw()内で呼び出す。
+    void update() {}
 }
 
 // 2D扇形
@@ -40,7 +44,7 @@ class Sector2D extends MyObject{
     //ad,bdは回転後の位置ベクトル
     PVector a,b,ad,bd;
     
-    public Sector2D(PVector origin, float alpha, float theta, float radius1, float radius2) {
+    public Sector2D(PVector origin, float alpha, float theta, float radius1, float radius2, int registID) {
         this.alpha = alpha;
         this.theta = theta;
         this.origin = new PVector(origin.x,origin.y);
@@ -54,12 +58,31 @@ class Sector2D extends MyObject{
         position = PVector.mult(PVector.add(PVector.sub(a,origin),PVector.sub(ad,origin)).normalize(),(r2 + r1) / 2.0); //扇形の中心点(重心)
         
         //扇形オブジェクトリストに登録
-        sectors.add(this);
+        if (registID == 1) {
+            objects.add(this);
+            sectors.add(this);
+        }
+        else if (registID == 2) {
+            objects.add(this);
+        }
+        else if (registID == 3) {
+            sectors.add(this);
+        }
     }
     
     void DisplayShape() {
-        var currentCol = currentFillColor;  //直近の色を保存
+        noFill();
+        float al = alpha + angle;
+        float th = theta + angle;
         
+        arc(origin.x, origin.y, r2 * 2, r2 * 2, al, th);
+        arc(origin.x, origin.y, r1 * 2, r1 * 2, al, th);
+        line(a.x, a.y, b.x, b.y); //回転前の線分
+        line(ad.x, ad.y, bd.x, bd.y); //回転後の線分
+    }
+    
+    void DisplayShape(float gray) {
+        fill(gray);
         float al = alpha + angle;
         float th = theta + angle;
         
@@ -68,8 +91,18 @@ class Sector2D extends MyObject{
         arc(origin.x, origin.y, r1 * 2, r1 * 2, al, th);
         line(a.x, a.y, b.x, b.y); //回転前の線分
         line(ad.x, ad.y, bd.x, bd.y); //回転後の線分
+    }
+    
+    void DisplayShape(float v1, float v2, float v3) {
+        fill(v1, v2 ,v3);
+        float al = alpha + angle;
+        float th = theta + angle;
         
-        fill(currentCol.x, currentCol.y, currentCol.z); //直近の色に戻す
+        arc(origin.x, origin.y, r2 * 2, r2 * 2, al, th);
+        fill(255);  //小円部分は白で塗りつぶす
+        arc(origin.x, origin.y, r1 * 2, r1 * 2, al, th);
+        line(a.x, a.y, b.x, b.y); //回転前の線分
+        line(ad.x, ad.y, bd.x, bd.y); //回転後の線分
     }
     
     void SetPos(PVector pos) {
@@ -107,7 +140,7 @@ class MyBox extends MyObject{
     //幅、高さ
     float w,h;
     
-    public MyBox(PVector pos, float width, float height) {
+    public MyBox(PVector pos, float width, float height, int registID) {
         position = new PVector(pos.x,pos.y);
         w = width;
         h = height;
@@ -117,15 +150,39 @@ class MyBox extends MyObject{
         v[3] = new PVector(position.x + w / 2, position.y - h / 2);
         
         //矩形オブジェクトリストに登録
-        boxes.add(this);
+        if (registID == 1) {
+            objects.add(this);
+            boxes.add(this);
+        }
+        else if (registID == 2) {
+            objects.add(this);
+        }
+        else if (registID == 3) {
+            boxes.add(this);
+        }
     }
     
-    void DisplayShape() {
+    void BoxShape() {
         pushMatrix();
         translate(position.x, position.y);
         rotate(angle);
         rect( -w / 2, -h / 2, w, h);
         popMatrix();
+    }
+    
+    void DisplayShape() {
+        noFill();
+        BoxShape();
+    }
+    
+    void DisplayShape(float gray) {
+        fill(gray);
+        BoxShape();
+    }
+    
+    void DisplayShape(float v1, float v2, float v3) {
+        fill(v1, v2, v3);
+        BoxShape();
     }
     
     void SetPos(PVector pos) {
@@ -152,15 +209,35 @@ class MyBox extends MyObject{
 class MyCircle extends MyObject{
     //半径
     float r;
-    public MyCircle(PVector pos, float radius) {
+    public MyCircle(PVector pos, float radius, int registID) {
         this.position = new PVector(pos.x,pos.y);
         r = radius;
         
         //円オブジェクトリストに登録するかどうか
-        circles.add(this);
+        if (registID == 1) {
+            objects.add(this);
+            circles.add(this);
+        }
+        else if (registID == 2) {
+            objects.add(this);
+        }
+        else if (registID == 3) {
+            circles.add(this);
+        }
     }
     
     void DisplayShape() {
+        noFill();
+        ellipse(position.x, position.y, r * 2, r * 2);
+    }
+    
+    void DisplayShape(float gray) {
+        fill(gray);
+        ellipse(position.x, position.y, r * 2, r * 2);
+    }
+    
+    void DisplayShape(float v1, float v2, float v3) {
+        fill(v1, v2, v3);
         ellipse(position.x, position.y, r * 2, r * 2);
     }
     

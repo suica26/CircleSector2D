@@ -21,6 +21,14 @@ boolean display = true;                                             //描画切�
 PVector[] AABBpoints = new PVector[8];                              //AABB計算用頂点
 MyBox AABB;                                                         //AABBボックス
 
+PVector mousePos = new PVector();
+
 Sector2D sector;
-MyBox box;
-MyCircle circle;
+MyBox gun;
+MyBox gun_front;
+PVector gunDir = new PVector();
+
+MyCircle bullet;
+PVector bulletMoveVec = new PVector();
+
+float xRange, yRange;
