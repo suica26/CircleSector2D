@@ -45,9 +45,10 @@ class Sector2D extends MyObject{
     PVector a,b,ad,bd;
     
     public Sector2D(PVector origin, float alpha, float theta, float radius1, float radius2, int registID) {
+        this.origin = new PVector(origin.x,origin.y);
         this.alpha = alpha;
         this.theta = theta;
-        this.origin = new PVector(origin.x,origin.y);
+        angle = theta - alpha;
         r1 = radius1;
         r2 = radius2;
         
@@ -68,6 +69,20 @@ class Sector2D extends MyObject{
         else if (registID == 3) {
             sectors.add(this);
         }
+    }
+    
+    void Copy(Sector2D s) {
+        this.origin.set(s.origin.x, s.origin.y);
+        this.alpha = s.alpha;
+        this.theta = s.theta;
+        this.angle = s.angle;
+        this.r1 = s.r1;
+        this.r2 = s.r2;
+        this.a.set(s.a.x, s.a.y);
+        this.b.set(s.b.x, s.b.y);
+        this.ad.set(s.ad.x, s.ad.y);
+        this.bd.set(s.bd.x, s.bd.y);
+        this.position.set(s.position.x, s.position.y);
     }
     
     void DisplayShape() {
@@ -162,6 +177,17 @@ class MyBox extends MyObject{
         }
     }
     
+    void Copy(MyBox b) {
+        this.position.set(b.position.x, b.position.y);
+        this.w = b.w;
+        this.h = b.h;
+        this.angle = b.angle;
+        this.v[0].set(b.v[0].x, b.v[0].y);
+        this.v[1].set(b.v[1].x, b.v[1].y);
+        this.v[2].set(b.v[2].x, b.v[2].y);
+        this.v[3].set(b.v[3].x, b.v[3].y);
+    }
+    
     void BoxShape() {
         pushMatrix();
         translate(position.x, position.y);
@@ -224,6 +250,11 @@ class MyCircle extends MyObject{
         else if (registID == 3) {
             circles.add(this);
         }
+    }
+    
+    void Copy(MyCircle c) {
+        this.position.set(c.position.x, c.position.y);
+        this.angle = c.angle;
     }
     
     void DisplayShape() {

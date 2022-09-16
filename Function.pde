@@ -9,16 +9,80 @@
 
 
 */
-void keyTyped() {
-    if (key == ' ') {
+void keyPressed() {
+    //銃弾装填
+    if (key == ' ' && !(inXrange && inYrange)) {
         bullet.SetPos(gun_front.position);
         bulletMoveVec.set(gunDir.x, gunDir.y);
-        bulletMoveVec = PVector.mult(bulletMoveVec.normalize(),75);
+        CD = false;
     }
+    
+    //パラメーター降下
+    if (keyCode == LEFT) {
+        switch(changeID) {
+            case 0 :
+                targetFPS -= paramChangeValue;
+                if (targetFPS < 1) targetFPS = 1;
+                frameRate(targetFPS);
+                break;
+            case 1 :
+                bulletSpeed -= paramChangeValue;
+                if (bulletSpeed < 1) bulletSpeed = 1;
+                break;
+            case 2 :
+                rotSpeed -= paramChangeValue;
+                if (rotSpeed < 1) rotSpeed = 1;
+                break;
+            case 3 :
+                if (--ccdID < 0) ccdID = 0;
+                switch(ccdID) {
+                    case 0 : text_CCD = "none"; break;	
+                case 1 : text_CCD = "S-CCD"; break;
+                case 2 : text_CCD = "Sector"; break;
+            }
+            break;
+        }
+    }
+    
+    //パラメーター上昇
+    if (keyCode == RIGHT) {
+        switch(changeID) {
+            case 0 :
+                targetFPS += paramChangeValue;
+                if (targetFPS > 240) targetFPS = 240;
+                frameRate(targetFPS);
+                break;
+            case 1 :
+                bulletSpeed += paramChangeValue;
+                if (bulletSpeed > 10000) bulletSpeed = 1000;
+                break;
+            case 2 :
+                rotSpeed += paramChangeValue;
+                if (rotSpeed > 10000) rotSpeed = 180;
+                break;
+            case 3 :
+                if (++ccdID > 2) ccdID = 2;
+                switch(ccdID) {
+                    case 0 : text_CCD = "none"; break;	
+                case 1 : text_CCD = "S-CCD"; break;
+                case 2 : text_CCD = "Sector"; break;
+            }
+            break;
+        }
+    }
+    
+    //変更するパラメーターを選択
+    if (keyCode == UP) if (--changeID < 0) changeID = 0;
+    
+    if (keyCode == DOWN) if (++changeID > 3) changeID = 3;
 }
 
-void mouseButton() {
-    
+void keyTyped() {
+    if (key == '1') paramChangeValue = 5;
+}
+
+void keyReleased() {
+    if (key == '1') paramChangeValue = 1;
 }
 
 // 外積関数
@@ -51,7 +115,7 @@ PVector[] GetCrossPoints_CircleLine(float x1, float y1, float x2, float y2, floa
     //傾きの算出
     float xd = x2 - x1;
     float yd = y2 - y1;
-    //円の公式(x^2 + y^2 = r^2)への代入と整理
+    //円の公式(x^2 + y^2= r^2)への代入と整理
     float x = x1 - circleX;
     float y = y1 - circleY;
     float a = xd * xd + yd * yd;
@@ -74,14 +138,14 @@ PVector[] GetCrossPoints_CircleLine(float x1, float y1, float x2, float y2, floa
 
 //円同士の交点算出
 PVector[] GetCrossPoints_CircleCircle(PVector c1, PVector c2, float r1, float r2) {
-    //参考URL：https://mathwords.net/ennokoten
+    // 参考URL：https :/ /mathwords.net/ennokoten
     PVector[] crossPoint = new PVector[2];
     float x1,x2,y1,y2;
     float u,v,a,b,c,d;
     
-    //(x-a)^2 + (y-b)^2 = r1^2と
-    //(x-c)^2 + (y-d)^2 = r2^2を連立させたことによって求められる
-    //y = -(a-c)/(b-d)x + (a^2 + b^2 - c^2 - d^2 - r1^2 r2^2)/(b-d)
+    // (x - a) ^ 2 + (y - b) ^ 2 = r1 ^ 2と
+    //(x - c) ^ 2 + (y - d) ^ 2 = r2 ^ 2を連立させたことによって求められる
+    //y = -(a - c) / (b - d)x + (a ^ 2 + b ^ 2 - c ^ 2 - d ^ 2 - r1 ^ 2 r2 ^ 2) / (b - d)
     //0除算は未対応
     u = -(c1.x - c2.x) / (c1.y - c2.y);
     v = (c1.x * c1.x + c1.y * c1.y - c2.x * c2.x - c2.y * c2.y - r1 * r1 + r2 * r2) / 2.0 / (c1.y - c2.y);
@@ -94,7 +158,7 @@ PVector[] GetCrossPoints_CircleCircle(PVector c1, PVector c2, float r1, float r2
     y1 = u * x1 + v;
     y2 = u * x2 + v;
     
-    //判別式Dが0未満の時は虚数解なのでスルー
+    // 判別式Dが0未満の時は虚数解なのでスルー
     if (d >= 0.0) {
         crossPoint[0] = new PVector(x1,y1);
         crossPoint[1] = new PVector(x2,y2);
@@ -198,7 +262,7 @@ boolean CheckPointInSector(Sector2D f, PVector p) {
     
     //正の回転の場合
     if (f.theta - f.alpha >= 0) {
-        if (Cross(PVector.sub(p,f.origin),PVector.sub(f.a,f.origin)) >= epsilon) return false;
+        if (Cross(PVector.sub(p,f.origin),PVector.sub(f.a,f.origin)) >= epsilon)return false;
         if (Cross(PVector.sub(p,f.origin),PVector.sub(f.ad,f.origin)) <= -epsilon) return false;
     }
     else{   //負の回転の場合

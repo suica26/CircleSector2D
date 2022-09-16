@@ -23,7 +23,6 @@ MyBox AABB;                                                         //AABBボッ
 
 PVector mousePos = new PVector();
 
-Sector2D sector;
 MyBox gun;
 MyBox gun_front;
 PVector gunDir = new PVector();
@@ -31,4 +30,23 @@ PVector gunDir = new PVector();
 MyCircle bullet;
 PVector bulletMoveVec = new PVector();
 
+MyBox rotRod;
+MyBox preRotRod;
+boolean CD = false;
+
 float xRange, yRange;
+boolean inXrange, inYrange;
+
+int changeID;
+int paramChangeValue = 1;
+int timer = 0;
+
+int targetFPS = 60;
+float bulletSpeed = 3000;
+float rotSpeed = 900;
+int ccdID;
+
+int text_FPS;
+int text_bulletSpeed;
+int text_rotSpeed;
+String text_CCD = "none";
