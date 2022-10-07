@@ -116,6 +116,10 @@ void draw() {
     text_rotSpeed = int(rotSpeed);
     
     //テキストUI
+    fill(15);
+    text("数値変化量:", -width / 2 + 50, height / 2 - 50);
+    text(paramChangeValue, -width / 2 + 530, height / 2 - 50);
+    
     if (changeID == 0) fill(255, 0, 0);
     else fill(15);
     text("FPS:", -width / 2 + 50, -height / 2 + 100);
