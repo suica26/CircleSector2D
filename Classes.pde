@@ -337,3 +337,9 @@ class MyCircle extends MyObject{
     }
 }
 
+class MyCapsule extends MyObject{
+    float r;
+    //始点と終点
+    PVector s, e;
+    
+}
