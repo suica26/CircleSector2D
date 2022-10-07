@@ -4,6 +4,28 @@
 */
 
 
+boolean CollisionDetection_CircleCricle(MyCircle c1, MyCircle c2) {
+    float d = dist(c1.position.x, c1.position.y, c2.position.x, c2.position.y);
+    if (d <= c1.r + c2.r) return true;
+    return false;
+}
+
+boolean CollisionDetection_BoxBox(MyBox b1, MyBox b2) {
+    var bbP = GetCrossPoints_BoxBox(b1,b2);
+    
+    for (PVector p : bbP) {
+        if (p!= null) return true;
+    }
+    
+    if (CheckPointInBox(b1,b2.position)) return true;
+    
+    return false;
+}
+
+boolean CollisionDetection_CapsuleCapsule() {
+    return false;
+}
+
 boolean CollisionDetection_SectorBox(Sector2D s, MyBox b) {
     //扇形と長方形が交差しているかのチェック
     var sbP = GetCrossPoints_SectorBox(s,b);
@@ -34,18 +56,6 @@ boolean CollisionDetection_SectorCircle(Sector2D s, MyCircle c) {
     
     //扇形に円が覆われているかのチェック
     if (CheckPointInSector(s,c.position)) return true;
-    
-    return false;
-}
-
-boolean CollisionDetection_BoxBox(MyBox b1, MyBox b2) {
-    var bbP = GetCrossPoints_BoxBox(b1,b2);
-    
-    for (PVector p : bbP) {
-        if (p!= null) return true;
-    }
-    
-    if (CheckPointInBox(b1,b2.position)) return true;
     
     return false;
 }

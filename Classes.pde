@@ -28,8 +28,6 @@ class MyObject {
     void SetPos(PVector pos) {}
     //回転角(ラジアン)と回転中心を入力することで回転
     void Rotate(float t, PVector o) {}
-    //draw()内で呼び出す。
-    void update() {}
 }
 
 // 2D扇形
@@ -87,6 +85,17 @@ class Sector2D extends MyObject{
         this.position.set(s.position.x, s.position.y);
     }
     
+    void SectorShape() {
+        float al = alpha + angle;
+        float th = theta + angle;
+        
+        arc(origin.x, origin.y, r2 * 2, r2 * 2, al, th);
+        fill(255);  //小円部分は白で塗りつぶす
+        arc(origin.x, origin.y, r1 * 2, r1 * 2, al, th);
+        line(a.x, a.y, b.x, b.y); //回転前の線分
+        line(ad.x, ad.y, bd.x, bd.y); //回転後の線分
+    }
+    
     void DisplayShape() {
         noFill();
         float al = alpha + angle;
@@ -100,50 +109,22 @@ class Sector2D extends MyObject{
     
     void DisplayShape(float gray) {
         fill(gray);
-        float al = alpha + angle;
-        float th = theta + angle;
-        
-        arc(origin.x, origin.y, r2 * 2, r2 * 2, al, th);
-        fill(255);  //小円部分は白で塗りつぶす
-        arc(origin.x, origin.y, r1 * 2, r1 * 2, al, th);
-        line(a.x, a.y, b.x, b.y); //回転前の線分
-        line(ad.x, ad.y, bd.x, bd.y); //回転後の線分
+        SectorShape();
     }
     
     void DisplayShape(float gray, float alpha) {
         fill(gray, alpha);
-        float al = this.alpha + angle;
-        float th = this.theta + angle;
-        
-        arc(origin.x, origin.y, r2 * 2, r2 * 2, al, th);
-        fill(255);  //小円部分は白で塗りつぶす
-        arc(origin.x, origin.y, r1 * 2, r1 * 2, al, th);
-        line(a.x, a.y, b.x, b.y); //回転前の線分
-        line(ad.x, ad.y, bd.x, bd.y); //回転後の線分
+        SectorShape();
     }
     
     void DisplayShape(float v1, float v2, float v3) {
         fill(v1, v2 ,v3);
-        float al = alpha + angle;
-        float th = theta + angle;
-        
-        arc(origin.x, origin.y, r2 * 2, r2 * 2, al, th);
-        fill(255);  //小円部分は白で塗りつぶす
-        arc(origin.x, origin.y, r1 * 2, r1 * 2, al, th);
-        line(a.x, a.y, b.x, b.y); //回転前の線分
-        line(ad.x, ad.y, bd.x, bd.y); //回転後の線分
+        SectorShape();
     }
     
     void DisplayShape(float v1, float v2, float v3, float alpha) {
         fill(v1, v2 ,v3, alpha);
-        float al = this.alpha + angle;
-        float th = this.theta + angle;
-        
-        arc(origin.x, origin.y, r2 * 2, r2 * 2, al, th);
-        fill(255);  //小円部分は白で塗りつぶす
-        arc(origin.x, origin.y, r1 * 2, r1 * 2, al, th);
-        line(a.x, a.y, b.x, b.y); //回転前の線分
-        line(ad.x, ad.y, bd.x, bd.y); //回転後の線分
+        SectorShape();
     }
     
     void SetPos(PVector pos) {
@@ -297,6 +278,7 @@ class MyCircle extends MyObject{
     void Copy(MyCircle c) {
         this.position.set(c.position.x, c.position.y);
         this.angle = c.angle;
+        this.r = c.r;
     }
     
     void DisplayShape() {
@@ -341,5 +323,71 @@ class MyCapsule extends MyObject{
     float r;
     //始点と終点
     PVector s, e;
+    public MyCapsule(PVector start, PVector end, float radius, int registID) {
+        this.s = new PVector(start.x, start.y);
+        this.e = new PVector(end.x, end.y);
+        this.position = PVector.div(PVector.add(s, e), 2.0);
+        this.r = radius;
+    }
     
+    void Copy(MyCapsule c) {
+        this.s.set(c.s.x, c.s.y);
+        this.e.set(c.e.x, c.e.y);
+        this.position.set(c.position.x, c.position.y);
+        this.r = c.r;
+        this.angle = c.angle;
+    }
+    
+    void CapsuleShape() {
+        pushMatrix();
+        translate(position.x, position.y);
+        rotate(angle);
+        
+        arc(s.x, s.y, r * 2, r * 2, radians(0), radians(180));
+        arc(e.x, e.y, r * 2, r * 2, radians(180), radians(360));
+        
+        popMatrix();
+    }
+    
+    void DisplayShape() {
+        noFill();
+        ellipse(position.x, position.y, r * 2, r * 2);
+    }
+    
+    void DisplayShape(float gray) {
+        fill(gray);
+        ellipse(position.x, position.y, r * 2, r * 2);
+    }
+    
+    void DisplayShape(float gray, float alpha) {
+        fill(gray, alpha);
+        ellipse(position.x, position.y, r * 2, r * 2);
+    }
+    
+    void DisplayShape(float v1, float v2, float v3, float alpha) {
+        fill(v1, v2, v3, alpha);
+        ellipse(position.x, position.y, r * 2, r * 2);
+    }
+    
+    void SetPos(PVector pos) {
+        PVector moveVec = PVector.sub(pos, position);    //positionからposへの移動ベクトル
+        position.set(pos);
+        s = s.add(moveVec);
+        e = e.add(moveVec);
+    }
+    
+    void Rotate(float t, PVector o) {
+        //回転中心を原点に移動
+        var moveVec = new PVector(o.x, o.y);
+        SetPos(PVector.sub(position, moveVec));
+        
+        //回転
+        position = RotateMatrix(t, position);
+        s = RotateMatrix(t, s);
+        e = RotateMatrix(t, e);
+        angle += t;
+        
+        //回転中心をもとの座標に戻す
+        SetPos(PVector.add(position, moveVec));
+    }
 }
