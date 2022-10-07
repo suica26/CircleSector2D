@@ -1,3 +1,8 @@
+/*
+衝突判定関数をまとめたファイルです
+
+*/
+
 
 boolean CollisionDetection_SectorBox(Sector2D s, MyBox b) {
     //扇形と長方形が交差しているかのチェック

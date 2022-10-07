@@ -1,3 +1,10 @@
+/*
+各図形と点の内外判定関数をまとめたファイルです
+
+
+
+
+*/
 
 // 扇形と点の内外判定
 boolean CheckPointInSector(Sector2D f, PVector p) {

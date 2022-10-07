@@ -1,3 +1,16 @@
+/*
+プリミティブとの交差点算出関数をまとめたファイルです
+
+
+
+
+
+
+
+
+
+
+*/
 
 //線分と線分の交点
 PVector GetCrossPoints_LineLine(PVector a, PVector b, PVector c, PVector d) {
