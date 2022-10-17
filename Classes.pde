@@ -1,5 +1,5 @@
 /*
-クラス記述用ファイル
+自作クラス記述用ファイルです
 
 
 
@@ -20,11 +20,14 @@ class MyObject {
     public MyObject() {}
     //図形描画関数
     void DisplayShape() {}
+    void DisplayShape(float gray) {}
+    void DisplayShape(float gray, float alpha) {}
+    void DisplayShape(float v1, float v2, float v3) {}
+    void DisplayShape(float v1, float v2, float v3, float alpha) {}
     //中心設定関数
     void SetPos(PVector pos) {}
-    //回転角(ラジアン)を入力することで回転
-    void Rotate(float t) {}
-    void RotateWithVec(float t, PVector o) {}
+    //回転角(ラジアン)と回転中心を入力することで回転
+    void Rotate(float t, PVector o) {}
 }
 
 // 2D扇形
@@ -41,10 +44,11 @@ class Sector2D extends MyObject{
     //ad,bdは回転後の位置ベクトル
     PVector a,b,ad,bd;
     
-    public Sector2D(float alpha, float theta, PVector origin, float radius1, float radius2, boolean isRegisted, boolean isMoving, boolean isRotating) {
+    public Sector2D(PVector origin, float alpha, float theta, float radius1, float radius2, int registID) {
+        this.origin = new PVector(origin.x,origin.y);
         this.alpha = alpha;
         this.theta = theta;
-        this.origin = new PVector(origin.x,origin.y);
+        angle = theta - alpha;
         r1 = radius1;
         r2 = radius2;
         
@@ -54,51 +58,89 @@ class Sector2D extends MyObject{
         bd = new PVector(r2 * cos(theta) + origin.x, r2 * sin(theta) + origin.y);
         position = PVector.mult(PVector.add(PVector.sub(a,origin),PVector.sub(ad,origin)).normalize(),(r2 + r1) / 2.0); //扇形の中心点(重心)
         
-        //オブジェクトリストに登録するかどうか
-        if (isRegisted) sectors.add(this);
-        RegistObjList(this, isMoving, isRotating);
+        //扇形オブジェクトリストに登録
+        if (registID == 1) {
+            objects.add(this);
+            sectors.add(this);
+        }
+        else if (registID == 2) {
+            objects.add(this);
+        }
+        else if (registID == 3) {
+            sectors.add(this);
+        }
+    }
+    
+    void Copy(Sector2D s) {
+        this.origin.set(s.origin.x, s.origin.y);
+        this.alpha = s.alpha;
+        this.theta = s.theta;
+        this.angle = s.angle;
+        this.r1 = s.r1;
+        this.r2 = s.r2;
+        this.a.set(s.a.x, s.a.y);
+        this.b.set(s.b.x, s.b.y);
+        this.ad.set(s.ad.x, s.ad.y);
+        this.bd.set(s.bd.x, s.bd.y);
+        this.position.set(s.position.x, s.position.y);
+    }
+    
+    void SectorShape() {
+        float al = alpha + angle;
+        float th = theta + angle;
+        
+        arc(origin.x, origin.y, r2 * 2, r2 * 2, al, th);
+        fill(255);  //小円部分は白で塗りつぶす
+        arc(origin.x, origin.y, r1 * 2, r1 * 2, al, th);
+        line(a.x, a.y, b.x, b.y); //回転前の線分
+        line(ad.x, ad.y, bd.x, bd.y); //回転後の線分
     }
     
     void DisplayShape() {
         noFill();
         float al = alpha + angle;
         float th = theta + angle;
+        
         arc(origin.x, origin.y, r2 * 2, r2 * 2, al, th);
         arc(origin.x, origin.y, r1 * 2, r1 * 2, al, th);
-        fill(255);
         line(a.x, a.y, b.x, b.y); //回転前の線分
         line(ad.x, ad.y, bd.x, bd.y); //回転後の線分
-        //ellipse(origin.x,origin.y,15,15); //回転中心
+    }
+    
+    void DisplayShape(float gray) {
+        fill(gray);
+        SectorShape();
+    }
+    
+    void DisplayShape(float gray, float alpha) {
+        fill(gray, alpha);
+        SectorShape();
+    }
+    
+    void DisplayShape(float v1, float v2, float v3) {
+        fill(v1, v2 ,v3);
+        SectorShape();
+    }
+    
+    void DisplayShape(float v1, float v2, float v3, float alpha) {
+        fill(v1, v2 ,v3, alpha);
+        SectorShape();
     }
     
     void SetPos(PVector pos) {
-        var PO = PVector.sub(origin,position);
-        position.set(pos);
-        origin = PVector.add(position,PO);
-        
-        float al = alpha + angle;
-        float th = theta + angle;
-        
-        a.set(r1 * cos(al) + origin.x, r1 * sin(al) + origin.y);
-        b.set(r2 * cos(al) + origin.x, r2 * sin(al) + origin.y);
-        ad.set(r1 * cos(th) + origin.x, r1 * sin(th) + origin.y);
-        bd.set(r2 * cos(th) + origin.x, r2 * sin(th) + origin.y);
+        var moveVec = PVector.sub(pos, position);   //positionからposへの移動ベクトル
+        position.add(moveVec);
+        origin.add(moveVec);
+        a.add(moveVec);
+        b.add(moveVec);
+        ad.add(moveVec);
+        bd.add(moveVec);
     }
     
-    void Rotate(float t) {
-        //回転行列を利用して回転
-        a = PVector.add(RotateMatrix(t,PVector.sub(a,position)),position);
-        b = PVector.add(RotateMatrix(t,PVector.sub(b,position)),position);
-        ad = PVector.add(RotateMatrix(t,PVector.sub(ad,position)),position);
-        bd = PVector.add(RotateMatrix(t,PVector.sub(bd,position)),position);
-        origin = PVector.add(RotateMatrix(t,PVector.sub(origin,position)),position);
-        angle += t;
-    }
-    
-    void RotateWithVec(float t, PVector o) {
+    void Rotate(float t, PVector o) {
         //回転中心を原点に移動
-        var movePos = PVector.sub(new PVector(0,0),o);
-        SetPos(PVector.add(position,movePos));
+        var moveVec = new PVector(o.x, o.y);
+        SetPos(PVector.sub(position,moveVec));
         
         //回転
         a = RotateMatrix(t,a);
@@ -106,10 +148,11 @@ class Sector2D extends MyObject{
         ad = RotateMatrix(t,ad);
         bd = RotateMatrix(t,bd);
         origin = RotateMatrix(t,origin);
+        position = RotateMatrix(t,position);
         angle += t;
         
         //回転中心をもとの座標に戻す
-        SetPos(PVector.sub(position, movePos));
+        SetPos(PVector.add(position, moveVec));
     }
 }
 
@@ -120,7 +163,7 @@ class MyBox extends MyObject{
     //幅、高さ
     float w,h;
     
-    public MyBox(PVector pos, float width, float height, boolean isRegisted, boolean isMoving, boolean isRotating) {
+    public MyBox(PVector pos, float width, float height, int registID) {
         position = new PVector(pos.x,pos.y);
         w = width;
         h = height;
@@ -129,41 +172,85 @@ class MyBox extends MyObject{
         v[2] = new PVector(position.x - w / 2, position.y - h / 2);
         v[3] = new PVector(position.x + w / 2, position.y - h / 2);
         
-        //オブジェクトリストに登録するかどうか
-        if (isRegisted) boxes.add(this);
-        RegistObjList(this,isMoving, isRotating);
+        //矩形オブジェクトリストに登録
+        if (registID == 1) {
+            objects.add(this);
+            boxes.add(this);
+        }
+        else if (registID == 2) {
+            objects.add(this);
+        }
+        else if (registID == 3) {
+            boxes.add(this);
+        }
+    }
+    
+    void Copy(MyBox b) {
+        this.position.set(b.position.x, b.position.y);
+        this.w = b.w;
+        this.h = b.h;
+        this.angle = b.angle;
+        this.v[0].set(b.v[0].x, b.v[0].y);
+        this.v[1].set(b.v[1].x, b.v[1].y);
+        this.v[2].set(b.v[2].x, b.v[2].y);
+        this.v[3].set(b.v[3].x, b.v[3].y);
+    }
+    
+    void BoxShape() {
+        pushMatrix();
+        translate(position.x, position.y);
+        rotate(angle);
+        rect( -w / 2, -h / 2, w, h);
+        popMatrix();
     }
     
     void DisplayShape() {
-        stroke(0);
-        for (int i = 0;i < 3;i++) {
-            line(v[i + 1].x,v[i + 1].y,v[i].x,v[i].y);
-        }
-        line(v[3].x,v[3].y,v[0].x,v[0].y);
+        noFill();
+        BoxShape();
+    }
+    
+    void DisplayShape(float gray) {
+        fill(gray);
+        BoxShape();
+    }
+    
+    void DisplayShape(float gray, float alpha) {
+        fill(gray, alpha);
+        BoxShape();
+    }
+    
+    void DisplayShape(float v1, float v2, float v3) {
+        fill(v1, v2, v3);
+        BoxShape();
+    }
+    
+    void DisplayShape(float v1, float v2, float v3, float alpha) {
+        fill(v1, v2, v3, alpha);
+        BoxShape();
     }
     
     void SetPos(PVector pos) {
-        PVector tl = PVector.sub(pos,position);
+        PVector moveVec = PVector.sub(pos, position);    //positionからposへの移動ベクトル
         position.set(pos);
-        for (int i = 0;i < 4;i++) v[i] = PVector.add(v[i],tl);
+        for (int i = 0;i < 4;i++) v[i] = PVector.add(v[i],moveVec);
     }
     
-    void Rotate(float t) {
-        for (int i = 0;i < 4;i++) v[i] = PVector.add(RotateMatrix(t,PVector.sub(v[i],position)),position);
-        angle += t;
-    }
-    
-    void RotateWithVec(float t, PVector o) {
+    void Rotate(float t, PVector o) {
         //回転中心を原点に移動
-        var movePos = PVector.sub(new PVector(0,0),o);
-        SetPos(PVector.add(position,movePos));
+        var moveVec = new PVector(o.x, o.y);    //oをそのまま利用すると、o = positionの時にpositionが0ベクトルになり、元の座標に戻せなくなる
+        SetPos(PVector.sub(position, moveVec));
         
         //回転
-        for (int i = 0;i < 4;i++) v[i] = RotateMatrix(t,v[i]);
+        var rotPos = RotateMatrix(t, position);
+        position.set(rotPos.x, rotPos.y);
+        for (int i = 0;i < 4;i++) {
+            var rotV = RotateMatrix(t,v[i]);
+            v[i].set(rotV.x, rotV.y);
+        }
         angle += t;
         
         //回転中心をもとの座標に戻す
-        SetPos(PVector.sub(position, movePos));
+        SetPos(PVector.add(position, moveVec));
     }
 }
 
@@ -171,38 +258,136 @@ class MyBox extends MyObject{
 class MyCircle extends MyObject{
     //半径
     float r;
-    public MyCircle(PVector pos, float radius, boolean isRegisted, boolean isMoving) {
+    public MyCircle(PVector pos, float radius, int registID) {
         this.position = new PVector(pos.x,pos.y);
         r = radius;
         
-        //オブジェクトリストに登録するかどうか
-        if (isRegisted) circles.add(this);        
-        RegistObjList(this,isMoving,false);
+        //円オブジェクトリストに登録するかどうか
+        if (registID == 1) {
+            objects.add(this);
+            circles.add(this);
+        }
+        else if (registID == 2) {
+            objects.add(this);
+        }
+        else if (registID == 3) {
+            circles.add(this);
+        }
+    }
+    
+    void Copy(MyCircle c) {
+        this.position.set(c.position.x, c.position.y);
+        this.angle = c.angle;
+        this.r = c.r;
     }
     
     void DisplayShape() {
         noFill();
-        ellipse(position.x,position.y,r * 2,r * 2);
-        fill(255);
+        ellipse(position.x, position.y, r * 2, r * 2);
+    }
+    
+    void DisplayShape(float gray) {
+        fill(gray);
+        ellipse(position.x, position.y, r * 2, r * 2);
+    }
+    
+    void DisplayShape(float gray, float alpha) {
+        fill(gray, alpha);
+        ellipse(position.x, position.y, r * 2, r * 2);
+    }
+    
+    void DisplayShape(float v1, float v2, float v3, float alpha) {
+        fill(v1, v2, v3, alpha);
+        ellipse(position.x, position.y, r * 2, r * 2);
     }
     
     void SetPos(PVector pos) {
         position.set(pos);
     }
     
-    void Rotate(float t) {angle += t;}
-    
-    void RotateWithVec(float t, PVector o) {
+    void Rotate(float t, PVector o) {
         //回転中心を原点に移動
-        var movePos = PVector.sub(new PVector(0,0),o);
-        SetPos(PVector.add(position,movePos));
+        var moveVec = new PVector(o.x, o.y);
+        SetPos(PVector.sub(position, moveVec));
         
         //回転
-        position = RotateMatrix(t,position);
+        position = RotateMatrix(t, position);
         angle += t;
         
         //回転中心をもとの座標に戻す
-        SetPos(PVector.sub(position, movePos));
+        SetPos(PVector.add(position, moveVec));
     }
 }
 
+class MyCapsule extends MyObject{
+    float r;
+    //始点と終点
+    PVector s, e;
+    public MyCapsule(PVector start, PVector end, float radius, int registID) {
+        this.s = new PVector(start.x, start.y);
+        this.e = new PVector(end.x, end.y);
+        this.position = PVector.div(PVector.add(s, e), 2.0);
+        this.r = radius;
+    }
+    
+    void Copy(MyCapsule c) {
+        this.s.set(c.s.x, c.s.y);
+        this.e.set(c.e.x, c.e.y);
+        this.position.set(c.position.x, c.position.y);
+        this.r = c.r;
+        this.angle = c.angle;
+    }
+    
+    void CapsuleShape() {
+        pushMatrix();
+        translate(position.x, position.y);
+        rotate(angle);
+        
+        arc(s.x, s.y, r * 2, r * 2, radians(0), radians(180));
+        arc(e.x, e.y, r * 2, r * 2, radians(180), radians(360));
+        
+        popMatrix();
+    }
+    
+    void DisplayShape() {
+        noFill();
+        ellipse(position.x, position.y, r * 2, r * 2);
+    }
+    
+    void DisplayShape(float gray) {
+        fill(gray);
+        ellipse(position.x, position.y, r * 2, r * 2);
+    }
+    
+    void DisplayShape(float gray, float alpha) {
+        fill(gray, alpha);
+        ellipse(position.x, position.y, r * 2, r * 2);
+    }
+    
+    void DisplayShape(float v1, float v2, float v3, float alpha) {
+        fill(v1, v2, v3, alpha);
+        ellipse(position.x, position.y, r * 2, r * 2);
+    }
+    
+    void SetPos(PVector pos) {
+        PVector moveVec = PVector.sub(pos, position);    //positionからposへの移動ベクトル
+        position.set(pos);
+        s = s.add(moveVec);
+        e = e.add(moveVec);
+    }
+    
+    void Rotate(float t, PVector o) {
+        //回転中心を原点に移動
+        var moveVec = new PVector(o.x, o.y);
+        SetPos(PVector.sub(position, moveVec));
+        
+        //回転
+        position = RotateMatrix(t, position);
+        s = RotateMatrix(t, s);
+        e = RotateMatrix(t, e);
+        angle += t;
+        
+        //回転中心をもとの座標に戻す
+        SetPos(PVector.add(position, moveVec));
+    }
+}

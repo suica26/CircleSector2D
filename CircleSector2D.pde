@@ -1,234 +1,142 @@
 /*
-メインルーチン記述用ファイル
+メインルーチン記述用ファイルです
 
-
-
-
-
-
+マウスボタン：筒を回転
+Spaceキー：弾を発射
+矢印キー：パラメータ操作
+1, 2, 3, 4番キー：パラメータ変更速度変更
+pキー：長方形の回転停止/開始
+dキー：CCD図形の描画切り替え
 
 
 */
 
 void settings() {
-    size(1200,900);
+    // size(900,600);
+    fullScreen();
 }
 
 void setup() {
-    file = createWriter("data.csv");
-    file.println("--sum--,Sector,SpeculativeCCD,RotateBox,--sameHit--,Sector,SpeculativeCCD,--extra--,Sector,SpeculativeCCD,--lack--,Sector,SpeculativeCCD,--miss--,Sector,SpeculativeCCD");
+    PFont font = createFont("Meiryo", 50);
+    textFont(font);
     
-    sector = new Sector2D(radians( -0),radians(0),new PVector(0,150),50,550,true,false,false);
-    //オブジェクト宣言
-    for (int i = 0;i < 0;i++) {
-        //var sector = new Sector2D(radians(random( -90,0)),radians(random(0,90)),new PVector(0,0),random(0,100),random(100,200), true, true, true);
-    }
-    for (int y = 0;y <= ls;y++) {
-        for (int x = 0;x <= ls;x++) {
-            var box = new MyBox(new PVector( -width / 2.0 + x * width / float(ls), -height / 2.0 + y * height / float(ls)),width / float(ls),height / float(ls),true,false, false);
-            RotateBoxHitCount.append(0);
-        }
-    }
-    for (int y = 0;y < 0;y++) {
-        for (int x = 0;x <= 0;x++) {
-            var circle = new MyCircle(new PVector( -width / 2.0 + x * width / float(ls), -height / 2.0 + y * height / float(ls)),8,true,false);
-        }
-    }
+    gun = new MyBox(new PVector( -200, 0), 100, 200, 2);
+    gun_front = new MyBox(new PVector( -200, 75), 100,50, 2);
+    bullet = new MyCircle(new PVector(width, 0), 20, 1);
     
-    willRotateBox = new MyBox(new PVector(300,150),500,25,false,false,false);
-    RotatedBox = new MyBox(new PVector(300, 150),500,25,false,false,false);
+    xRange = width / 2;
+    yRange = height / 2;
     
-    for (int i = 0;i < 4;i++) {
-        AABBpoints[i] = willRotateBox.v[i];
-        AABBpoints[i + 4] = RotatedBox.v[i];
+    rotRod = new MyBox(new PVector(200, 0), 350, 20, 1);
+    preRotRod = new MyBox(new PVector(200, 0), 350, 20, 0);
+    
+    frameRate(60);
+    textSize(90);
+    text_FPS = 60;
+    targetFPS = text_FPS;
+    
+    //S-CCD用AABBの設定
+    for (int i = 0; i < 4; i++) {
+        boundingPoints[i] = preRotRod.v[i];
+        boundingPoints[i + 4] = rotRod.v[i];
     }
-    
-    AABB = CreateAABB(AABBpoints);
-    moveFlg = false;
+    AABB = CreateAABB(boundingPoints);
+    sector = new Sector2D(new PVector(0, 0), 0, 0, 25, 375, 3);
 }
 
-
 void draw() {
-    translate(width / 2,height / 2);   //描画座標軸の変更
+    translate(width / 2, height / 2);   //描画座標軸の変更
     background(255);
-    fill(255);
+    SetFillColor(255);
     
-    // 図形の運動
+    //銃弾の運動範囲
+    inXrange = bullet.position.x < xRange - 10 && bullet.position.x > - (xRange - 10);
+    inYrange = bullet.position.y < yRange - 10 && bullet.position.y > - (yRange - 10);
+    if (inXrange && inYrange) bullet.SetPos(PVector.add(bullet.position,PVector.mult(bulletMoveVec.normalize(),bulletSpeed / frameRate)));
+    
+    //銃身の回転
+    if (mousePressed) {
+        if (mouseButton == LEFT) {
+            gun.Rotate(radians( -3), gun.position);
+            gun_front.Rotate(radians( -3), gun.position);
+        }
+        if (mouseButton == RIGHT) {
+            gun.Rotate(radians(3), gun.position);
+            gun_front.Rotate(radians(3), gun.position);
+        }
+    }
+    
+    //銃身の方向
+    gunDir = PVector.sub(gun.v[3], gun.v[0]);
+    gun.SetPos(new PVector(mouseX - width / 2, mouseY - height / 2));
+    gun_front.SetPos(PVector.add(gun.position,PVector.mult(gunDir.normalize(),75)));
+    
+    //回転
     if (moveFlg) {
-        //movement();
-        RotatedBox.RotateWithVec(radians( -1),new PVector(0,150));
-        AdjustSector(sector, RotatedBox.angle);
-        //AABBの更新
-        for (int i = 0;i < 4;i++) {
-            AABBpoints[i] = willRotateBox.v[i];
-            AABBpoints[i + 4] = RotatedBox.v[i];
-        }
-        AdjustAABB(AABB,AABBpoints);
-        
-        if (RotatedBox.angle <= -3.14) {
-            moveFlg = false;
-            if (exportCSVStatus == -1) exportCSVStatus = 0;
-        }
+        preRotRod.Copy(rotRod);
+        rotRod.Rotate(radians(rotSpeed / frameRate), new PVector(0, 0));
     }
     
-    ArrayList<PVector> collisionPosition = new ArrayList<PVector>();
-    var start = millis();
-    
-    //毎回ArratListのメンバ関数にアクセスする必要はないので、変数格納
-    int sSize = sectors.size();
-    int bSize = boxes.size();
-    int cSize = circles.size();
-    
-    int sectorHitNum = 0;
-    int AABBHitNum = 0;
-    
-    int[] sameHit = new int[2];
-    int[] extra = new int[2];
-    int[] lack = new int[2];
-    int[] miss = new int[2];
-    float[] accuracy = new float[2];
-    
-    for (int i = 0;i < 2;i++) {
-        sameHit[i] = 0;
-        extra[i] = 0;
-        lack[i] = 0;
-        miss[i] = 0;
-        accuracy[i] = 0.0;
-    }
-    
-    int secAcc = 0;
-    int speAcc = 0;
-    
-    for (int i = 0;i < bSize;i++) {
-        var box = boxes.get(i);
-        
-        boolean a,b,c;
-        a = b = c = false;
-        
-        if (CollisionDetection_SectorBox(sector,box)) { 
-            a = true;
-            sectorHitNum++;
-        }
-        if (CollisionDetection_BoxBox(AABB,box)) { 
-            b = true;
-            AABBHitNum++;
-        }
-        if (RotateBoxHitCount.get(i) == 0) {   
-            if (CollisionDetection_BoxBox(RotatedBox,box)) {
-                RotateBoxHitCount.set(i,1);
-                boxHitNum++;
+    //衝突判定
+    switch(ccdID) {
+        case 0 :
+            if (CollisionDetection_BoxCircle(rotRod, bullet)) CD = true;
+            break;	
+        case 1 :
+            for (int i = 0; i < 4; i++) {
+                boundingPoints[i] = preRotRod.v[i];
+                boundingPoints[i + 4] = rotRod.v[i];
             }
-        }
-        if (RotateBoxHitCount.get(i) == 1) c = true;
-        
-        //sameHit
-        if (a && c) sameHit[0]++;
-        if (b && c) sameHit[1]++;
-        //extra
-        if (a && !c) extra[0]++;
-        if (b && !c) extra[1]++;
-        //lack
-        if (!a && c) lack[0]++;
-        if (!b && c) lack[1]++;
+            AdjustAABB(AABB, boundingPoints);
+            if (CollisionDetection_BoxCircle(AABB, bullet)) CD = true;
+            break;
+        case 2 :
+            AdjustSector(sector, preRotRod.angle, rotRod.angle, 25, 375);
+            if (CollisionDetection_SectorCircle(sector, bullet) || CollisionDetection_BoxCircle(rotRod, bullet)) CD = true;
+            break;
     }
     
-    //扇形と長方形の干渉判定
-    // for (int i = 0;i < sSize;i++) {
-    //     for (int j = 0;j < bSize;j++) {
-    //         //配列の長さ取得と同様の理由
-    //         var s = sectors.get(i);
-    //         var b = boxes.get(j);
-    //         if (CollisionDetection_SectorBox(s,b)) {
-    //             // collisionPosition.add(b.position);
-    //             sectorHitNum++;
-    //         }
-    //     }
-// }
+    //描画
+    gun.DisplayShape(128);
+    gun_front.DisplayShape(0);
     
-    // 扇形と円の干渉判定
-    // for (int i = 0;i < sSize;i++) {
-    //     for (int j = 0;j < cSize;j++) {
-    //         //配列の長さ取得と同様の理由
-    //         var s = sectors.get(i);
-    //         var c = circles.get(j);
-    //         if (CollisionDetection_SectorCircle(s,c)) {
-    //             collisionPosition.add(c.position);
-    //         }
-    //     }
-// }
+    if (CD) bullet.DisplayShape(255, 0, 0, 255);
+    else bullet.DisplayShape(255, 255, 0, 255);
     
-    //長方形同士の干渉判定(AABB)
-    // for (MyBox b : boxes) {
-    //     if (CollisionDetection_BoxBox(AABB,b)) {
-    //         //collisionPosition.add(b.position);
-    //         AABBHitNum++;
-    //     }
-// }
-    
-    //長方形同士の干渉判定(回転長方形)
-    // for (int i = 0;i < bSize;i++) {
-    //     if (RotateBoxHitCount.get(i) == 0)
-    //         if (CollisionDetection_BoxBox(RotatedBox,boxes.get(i))) {
-    //             RotateBoxHitCount.set(i,1);
-    //             boxHitNum++;
-    //     }   
-// }
-    
-    var finish = millis();
-    
-    //干渉判定の実行時間(60frameに1回算出)
-    if (frameCount % 60 == 0) {
-        println("--------------------------------------------------------------");
-        println("start:" + start);
-        println("finish:" + finish);
-        println("progressTime:" + (finish - start));
-        println("angle:" + RotatedBox.angle);
-        println("Sector:" + sectorHitNum);
-        println("AABB:" + AABBHitNum);
-        println("Rotate:" + boxHitNum);
-    }
-    //干渉オブジェクトの中心点を描画
-    fill(0,255,0);
-    for (PVector p : collisionPosition) {
-        ellipse(p.x, p.y, 5, 5);
-    }
-    // 図形描画
-    if (display) {
-        for (MyObject o : objects) {
-            o.DisplayShape();
-        }
+    rotRod.DisplayShape(0,255,255);
+    if (ccdDispFlg) {
+        if (ccdID >= 1) preRotRod.DisplayShape();
+        if (ccdID == 1) AABB.DisplayShape(255, 0, 0, 63);
+        if (ccdID == 2) sector.DisplayShape(255, 0, 0, 63);
     }
     
-    for (int i = 0;i < 2;i++) miss[i] = extra[i] + lack[i];
+    //テキスト更新
+    if (++timer % 5 == 0) text_FPS = int(frameRate);
+    text_bulletSpeed = int(bulletSpeed);
+    text_rotSpeed = int(rotSpeed);
     
-    if (moveFlg && exportCSVStatus == -1) {
-        file.print("," + sectorHitNum + "," + AABBHitNum + "," + boxHitNum + ",");
-        file.print(",");
-        for (int i : sameHit)file.print(i + ",");
-        file.print(",");
-        for (int i : extra)file.print(i + ",");
-        file.print(",");
-        for (int i : lack)file.print(i + ",");
-        file.print(",");
-        for (int i : miss)file.print(i + ",");
-        file.println("");
-    }
+    //テキストUI
+    fill(15);
+    text("数値変化量:", -width / 2 + 50, height / 2 - 50);
+    text(paramChangeValue, -width / 2 + 530, height / 2 - 50);
     
-    if (exportCSVStatus == 0) {
-        exportCSVStatus = 1;
-        
-        file.print("," + sectorHitNum + "," + AABBHitNum + "," + boxHitNum + ",");
-        file.print(",");
-        for (int i : sameHit)file.print(i + ",");
-        file.print(",");
-        for (int i : extra)file.print(i + ",");
-        file.print(",");
-        for (int i : lack)file.print(i + ",");
-        file.print(",");
-        for (int i : miss)file.print(i + ",");
-        
-        file.flush();
-        file.close();
-        exit();
-    }
+    if (changeID == 0) fill(255, 0, 0);
+    else fill(15);
+    text("FPS:", -width / 2 + 50, -height / 2 + 100);
+    text(text_FPS, -width / 2 + 250, -height / 2 + 100);
+    
+    if (changeID == 1) fill(255, 0, 0);
+    else fill(15);
+    text("弾速:", -width / 2 + 50, -height / 2 + 200);
+    text(text_bulletSpeed, -width / 2 + 260, -height / 2 + 200);
+    
+    if (changeID == 2) fill(255, 0, 0);
+    else fill(15);
+    text("回転速度:", -width / 2 + 50, -height / 2 + 300);
+    text(text_rotSpeed, -width / 2 + 450, -height / 2 + 300);
+    
+    if (changeID == 3) fill(255, 0, 0);
+    else fill(15);
+    text("CCD:", -width / 2 + 50, -height / 2 + 400);
+    text(text_CCD, -width / 2 + 270, -height / 2 + 400);
 }
