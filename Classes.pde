@@ -328,6 +328,8 @@ class MyCapsule extends MyObject{
         this.e = new PVector(end.x, end.y);
         this.position = PVector.div(PVector.add(s, e), 2.0);
         this.r = radius;
+        var dir = PVector.sub(start, end);
+        this.angle = atan2(dir.y, dir.x);
     }
     
     void Copy(MyCapsule c) {
@@ -339,34 +341,53 @@ class MyCapsule extends MyObject{
     }
     
     void CapsuleShape() {
-        pushMatrix();
-        translate(position.x, position.y);
-        rotate(angle);
+        noFill();
+        PVector lineDir = zAxis.cross(PVector.sub(s, e)).normalize();
+        PVector capsuleWide = PVector.mult(lineDir, r);
         
-        arc(s.x, s.y, r * 2, r * 2, radians(0), radians(180));
-        arc(e.x, e.y, r * 2, r * 2, radians(180), radians(360));
+        var s1 = PVector.add(s, capsuleWide);
+        var s2 = PVector.sub(s, capsuleWide);
+        var e1 = PVector.add(e, capsuleWide);
+        var e2 = PVector.sub(e, capsuleWide);
         
-        popMatrix();
+        line(s1.x, s1.y, e1.x, e1.y);
+        line(s2.x, s2.y, e2.x, e2.y);
+        
+        float theta = radians(90) - angle;
+        
+        arc(s.x, s.y, r * 2, r * 2, radians(0) - theta, radians(180) - theta);
+        arc(e.x, e.y, r * 2, r * 2, radians(180) - theta, radians(360) - theta);
     }
     
     void DisplayShape() {
-        noFill();
-        ellipse(position.x, position.y, r * 2, r * 2);
+        CapsuleShape();
     }
     
     void DisplayShape(float gray) {
-        fill(gray);
-        ellipse(position.x, position.y, r * 2, r * 2);
+        strokeWeight(r * 2);
+        stroke(gray);
+        line(s.x, s.y, e.x, e.y);
+        strokeWeight(currentStrokeWeight);
+        stroke(currentStrokeColor.x, currentStrokeColor.y, currentStrokeColor.z);
+        CapsuleShape();
     }
     
     void DisplayShape(float gray, float alpha) {
-        fill(gray, alpha);
-        ellipse(position.x, position.y, r * 2, r * 2);
+        strokeWeight(r * 2);
+        stroke(gray, alpha);
+        line(s.x, s.y, e.x, e.y);
+        strokeWeight(currentStrokeWeight);
+        stroke(currentStrokeColor.x, currentStrokeColor.y, currentStrokeColor.z);
+        CapsuleShape();
     }
     
     void DisplayShape(float v1, float v2, float v3, float alpha) {
-        fill(v1, v2, v3, alpha);
-        ellipse(position.x, position.y, r * 2, r * 2);
+        strokeWeight(r * 2);
+        stroke(v1, v2, v3, alpha);
+        line(s.x, s.y, e.x, e.y);
+        strokeWeight(currentStrokeWeight);
+        stroke(currentStrokeColor.x, currentStrokeColor.y, currentStrokeColor.z);
+        CapsuleShape();
     }
     
     void SetPos(PVector pos) {
@@ -385,7 +406,8 @@ class MyCapsule extends MyObject{
         position = RotateMatrix(t, position);
         s = RotateMatrix(t, s);
         e = RotateMatrix(t, e);
-        angle += t;
+        var dir = PVector.sub(s, e);
+        this.angle += t;
         
         //回転中心をもとの座標に戻す
         SetPos(PVector.add(position, moveVec));

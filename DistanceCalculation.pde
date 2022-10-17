@@ -7,12 +7,11 @@
 //pは点、lpは直線状の点、vは直線の方向ベクトル
 //返り値は、{点と直線の最短距離、媒介変数t}の順で格納された配列
 float[] CalcPointLineDist(PVector p, PVector lp, PVector v) {
-    v = v.normalize();
     float denominator = PVector.dot(v, v);
-    float numerator = PVector.dot(v, lp) - PVector.dot(v, p);
+    float numerator = PVector.dot(v, p) - PVector.dot(v, lp);
     float t = numerator / denominator;
     PVector h = PVector.add(lp, PVector.mult(v, t));
-    float[] returnItems = {dist(h.x, h.y, p.x, p.y), t};
+    float[] returnItems = {dist(p.x, p.y, h.x, h.y), t};
     return returnItems;
 }
 
@@ -24,15 +23,15 @@ float[] CalcPointSegmentDist(PVector p, PVector s, PVector e) {
     
     float[] plDistItems = CalcPointLineDist(p, s, v);
     
-    if (t < 0.0) {
+    if (plDistItems[1] < 0.0) {
         //始点よりも外側にある場合、点pと点sの距離を算出
-        plDistItems[1] = 0;     //媒介変数t
         plDistItems[0] = dist(p.x, p.y, s.x, s.y);  //距離
+        plDistItems[1] = 0;     //媒介変数t
     }
-    else if (t > 1.0) {
+    else if (plDistItems[1] > 1.0) {
         //終点よりも外側にある場合、点pと点eの距離を算出
-        plDistItems[1] = 1.0;   //媒介変数t
         plDistItems[0] = dist(p.x, p.y, e.x, e.y);  //距離
+        plDistItems[1] = 1.0;   //媒介変数t
     }
     
     return plDistItems;
@@ -77,6 +76,7 @@ float[] CalcSegmentSegmentDist(PVector a, PVector b, PVector c, PVector d) {
     float s = llDistItems[1];
     float t = llDistItems[2];
     
+    //垂線が両線分の間にある
     if (0.0 <= s && s <= 1.0 && 0.0 <= s && s <= 0.0) {
         return llDistItems;
     }

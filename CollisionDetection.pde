@@ -22,8 +22,22 @@ boolean CollisionDetection_BoxBox(MyBox b1, MyBox b2) {
     return false;
 }
 
-boolean CollisionDetection_CapsuleCapsule() {
-    return false;
+boolean CollisionDetection_CapsuleCapsule(MyCapsule c1, MyCapsule c2) {
+    var ssDistItems = CalcSegmentSegmentDist(c1.s, c1.e, c2.s, c2.e);
+    float dist = ssDistItems[0];
+    
+    if (dist > c1.r + c2.r) return false;
+    else{
+        float s = ssDistItems[1];
+        PVector p = PVector.add(c1.s, PVector.mult(PVector.sub(c1.e, c1.s), s));
+        circle(p.x, p.y, 10);
+        
+        float t = ssDistItems[2];
+        PVector q = PVector.add(c2.s, PVector.mult(PVector.sub(c2.e, c2.s), t));
+        circle(q.x, q.y, 10);
+    }
+    
+    return true;
 }
 
 boolean CollisionDetection_SectorBox(Sector2D s, MyBox b) {
