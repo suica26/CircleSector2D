@@ -71,20 +71,22 @@ float[] CalcLineLineDist(PVector a, PVector v, PVector b, PVector w) {
 //それぞれの引数は線分の端点
 //返り値は、{直線と直線の最短距離、媒介変数s、媒介変数t}の順で格納された配列
 float[] CalcSegmentSegmentDist(PVector a, PVector b, PVector c, PVector d) {
-    float[] llDistItems = CalcLineLineDist(a, PVector.sub(b, a), c, PVector.sub(d, c));
+    var v = PVector.sub(b, a);
+    var w = PVector.sub(d, c);
+    float[] llDistItems = CalcLineLineDist(a, v, c, w);
     float dist = llDistItems[0];
     float s = llDistItems[1];
     float t = llDistItems[2];
     
     //垂線が両線分の間にある
-    if (0.0 <= s && s <= 1.0 && 0.0 <= s && s <= 0.0) {
+    if ((0.0 <= s && s <= 1.0) && (0.0 <= t && t <= 1.0)) {
         return llDistItems;
     }
     
     //垂線の足が外にある事が判明
     //sを0～1の間にクランプして線分CDに垂線を降ろす
     s = constrain(s, 0.0, 1.0);
-    PVector p = PVector.add(a, PVector.mult(PVector.sub(b, a), s)); //点Pを計算
+    PVector p = PVector.add(a, PVector.mult(v, s)); //点Pを計算
     float[] psDistItems = CalcPointSegmentDist(p, c, d);    //最短距離を計算しなおし
     t = psDistItems[1];
     if (0.0 <= t && t <= 1.0) {
@@ -94,17 +96,17 @@ float[] CalcSegmentSegmentDist(PVector a, PVector b, PVector c, PVector d) {
     
     //tを0～1の間にクランプして線分ABに垂線を降ろす
     t = constrain(t, 0.0, 1.0);
-    PVector q = PVector.add(c, PVector.mult(PVector.sub(d, c), t)); //点Qを計算
+    PVector q = PVector.add(c, PVector.mult(w, t)); //点Qを計算
     psDistItems = CalcPointSegmentDist(q, a, b);    //最短距離を計算しなおし
     s = psDistItems[1];
-    if (0.0 <= t && t <= 1.0) {
+    if (0.0 <= s && s <= 1.0) {
         float[] returnItems = {psDistItems[0], s, t};
         return returnItems;
     }
     
     // 双方の端点が最短と判明
     s = constrain(s, 0.0, 1.0);
-    p = PVector.add(a, PVector.mult(PVector.sub(b, a), s));
+    p = PVector.add(a, PVector.mult(v, s));
     float[] returnItems = {dist(p.x, p.y, q.x, q.y), s, t};
     return returnItems;
 }

@@ -29,15 +29,6 @@ void draw() {
     
     capsule.DisplayShape(128);
     
-    // var psDistItems = CalcPointSegmentDist(circle.position, cap2.s, cap2.e);
-    // if (psDistItems[0] <= cap2.r + circle.r) {
-    //     circle.DisplayShape(255, 0, 255, 255);
-    //     var p = PVector.add(cap2.s, PVector.mult(PVector.sub(cap2.e, cap2.s), psDistItems[1]));
-    //     circle(p.x, p.y, 10);
-// }
-    // else circle.DisplayShape();
-    
-    
     if (CollisionDetection_CapsuleCapsule(capsule, cap2))
         cap2.DisplayShape();
     else

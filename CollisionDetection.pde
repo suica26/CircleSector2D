@@ -31,10 +31,12 @@ boolean CollisionDetection_CapsuleCapsule(MyCapsule c1, MyCapsule c2) {
         float s = ssDistItems[1];
         PVector p = PVector.add(c1.s, PVector.mult(PVector.sub(c1.e, c1.s), s));
         circle(p.x, p.y, 10);
+        println("s:" + s);
         
         float t = ssDistItems[2];
         PVector q = PVector.add(c2.s, PVector.mult(PVector.sub(c2.e, c2.s), t));
         circle(q.x, q.y, 10);
+        println("t:" + t);
     }
     
     return true;
@@ -88,4 +90,9 @@ boolean CollisionDetection_BoxCircle(MyBox b, MyCircle c) {
     }
     
     return false;
+}
+
+boolean CollisionDetection_CircleCapsule(MyCircle cir, MyCapsule cap) {
+    if (CalcPointSegmentDist(cir.position, cap.s, cap.e)[0] <= cir.r + cap.r) return true;
+    else return false;
 }
