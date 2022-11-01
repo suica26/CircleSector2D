@@ -85,26 +85,29 @@ float[] CalcSegmentSegmentDist(PVector a, PVector b, PVector c, PVector d) {
     
     //垂線の足が外にある事が判明
     //sを0～1の間にクランプして線分CDに垂線を降ろす
+    println("calc" + 1);
     s = constrain(s, 0.0, 1.0);
     PVector p = PVector.add(a, PVector.mult(v, s)); //点Pを計算
-    float[] psDistItems = CalcPointSegmentDist(p, c, d);    //最短距離を計算しなおし
-    t = psDistItems[1];
+    float[] plDistItems = CalcPointLineDist(p, c, w);    //最短距離を計算しなおし
+    t = plDistItems[1];
     if (0.0 <= t && t <= 1.0) {
-        float[] returnItems = {psDistItems[0], s, t};
+        float[] returnItems = {plDistItems[0], s, t};
         return returnItems;
     }
     
     //tを0～1の間にクランプして線分ABに垂線を降ろす
+    println("calc" + 2);
     t = constrain(t, 0.0, 1.0);
     PVector q = PVector.add(c, PVector.mult(w, t)); //点Qを計算
-    psDistItems = CalcPointSegmentDist(q, a, b);    //最短距離を計算しなおし
-    s = psDistItems[1];
+    plDistItems = CalcPointLineDist(q, a, v);    //最短距離を計算しなおし
+    s = plDistItems[1];
     if (0.0 <= s && s <= 1.0) {
-        float[] returnItems = {psDistItems[0], s, t};
+        float[] returnItems = {plDistItems[0], s, t};
         return returnItems;
     }
     
     // 双方の端点が最短と判明
+    println("calc" + 3);
     s = constrain(s, 0.0, 1.0);
     p = PVector.add(a, PVector.mult(v, s));
     float[] returnItems = {dist(p.x, p.y, q.x, q.y), s, t};
